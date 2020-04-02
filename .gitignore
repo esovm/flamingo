@@ -2,3 +2,4 @@
 build/
 gg
 *.out
+.DS_Store
