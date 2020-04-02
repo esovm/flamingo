@@ -7,21 +7,21 @@
 
 #define VERSION "0.1.0"
 
-double evalop(int a, const char *op, int b)
+double evalop(double a, const char *op, double b)
 {
 	switch (*op) {
 	case '+': return a + b;
 	case '-': return a - b;
 	case '*': return a * b;
 	case '/': return a / b;
-	case '%': return a % b;
+	case '%': return fmod(a, b);
 	case '^': return pow(a, b);
 	}
 
 	if (strcmp(op, "min") == 0) return U_MIN(a, b);
 	if (strcmp(op, "max") == 0) return U_MAX(a, b);
 
-	return 0;
+	return 0.0;
 }
 
 double eval(mpc_ast_T *ast)
