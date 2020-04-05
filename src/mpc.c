@@ -3451,8 +3451,8 @@ static mpc_val_T *mpcaf_fold_regex(int n, mpc_val_T **xs) {
 
 /* Should this just use `isdigit` instead? */
 static int is_number(const char* s) {
-  size_t i;
-  for (i = 0; i < strlen(s); i++) { if (!strchr("0123456789", s[i])) { return 0; } }
+  char c;
+  while ((c = *s++)) if (!strchr("0123456789", c)) return 0;
   return 1;
 }
 
@@ -3488,11 +3488,11 @@ static mpc_parser_T *mpca_grammar_find_parser(char *x, mpca_grammar_st_t *st) {
     }
 
     /* Search New Parsers */
-    while (1) {
+    for (;;) {
 
       p = va_arg(*st->va, mpc_parser_T*);
 
-      st->parsers_num++;
+      ++st->parsers_num;
       st->parsers = realloc(st->parsers, sizeof(mpc_parser_T*) * st->parsers_num);
       st->parsers[st->parsers_num-1] = p;
 
@@ -3925,7 +3925,7 @@ static void mpc_optimise_unretained(mpc_parser_T *p, int force) {
 
   /* Perform optimisations */
 
-  while (1) {
+  for (;;) {
 
     /* Merge rhs `or` */
     if (p->type == MPC_TYPE_OR
@@ -4062,4 +4062,3 @@ static void mpc_optimise_unretained(mpc_parser_T *p, int force) {
 void mpc_optimise(mpc_parser_T *p) {
   mpc_optimise_unretained(p, 1);
 }
-

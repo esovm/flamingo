@@ -1,7 +1,7 @@
 BUILDDIR := build
 RM = -rm -rf
 
-default: gg
+default: debug
 gg:
 	$(MAKE) -f src/build.mk NAME=gg MODE=release SRCDIR=src
 	cp build/gg gg

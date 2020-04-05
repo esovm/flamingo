@@ -13,7 +13,11 @@ enum str2dbl_errno {
 	S2D_INCONVERTIBLE
 };
 
+void fuk(const char *fmt, ...);
+char *dupstr(const char *s);
 enum str2dbl_errno str2dbl(double *out, char *s);
 char *trim(char *str);
+char *readfile(const char *path);
+char *concat(const char *s1, ...);
 
 #endif
