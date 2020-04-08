@@ -8,6 +8,13 @@ typedef struct Node {
     struct Node *next;
 } Node;
 
-// List *list_new(void);
+typedef struct List {
+    Node *head;
+    size_t nelem;
+} List;
+
+Node *node_new(Object *data);
+List *list_new(void);
+void list_free(List *list);
 
 #endif
