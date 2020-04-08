@@ -20,6 +20,22 @@ void fuk(const char *fmt, ...)
     exit(1);
 }
 
+void *s_malloc(size_t size)
+{
+    void *ret = malloc(size);
+    if (!ret)
+        fuk("malloc failure!");
+    return ret;
+}
+
+void *s_realloc(void *ptr, size_t size)
+{
+    void *ret = realloc(ptr, size);
+    if (!ret)
+        fuk("realloc failure!");
+    return ret;
+}
+
 char *dupstr(const char *s)
 {
     size_t len = strlen(s) + 1;
@@ -28,7 +44,7 @@ char *dupstr(const char *s)
     return p ? memcpy(p, s, len) : NULL;
 }
 
-enum str2dbl_errno str2dbl(double *out, char *s)
+str2dbl_errno str2dbl(double *out, char *s)
 {
 	if (*s == '\0' || isspace((unsigned char)*s))
 		return S2D_INCONVERTIBLE;
@@ -93,31 +109,3 @@ char *readfile(const char *path)
 
     return buf;
 }
-
-/*char *concat(const char *s1, ...)
-{
-    va_list ap;
-    size_t total_len = 0;
-    const char *str = s1, *result;
-
-    va_start(ap, s1);
-
-    do {
-		total_len += strlen(str);
-	} while ((str = va_arg(ap, char *)));
-
-    va_end(ap);
-
-    if ((result = malloc(total_len + 1))) {
-        va_start(ap, s1);
-        str = s1;
-
-        do {
-            strcat(result, str);
-		} while (str = va_arg(ap, char *));
-
-        va_end(ap);
-    }
-
-    return result;
-}*/

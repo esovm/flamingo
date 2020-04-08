@@ -1,7 +1,0 @@
-number       : /-?\.?\d+\.?\d*/;
-symbol       : '+' | '-' | '*' | '/' | '%' | '^' | '&' | '|' | '~'
-               | "max" | "min" | "list" | "car" | "cdr" | "init" | "attach" | "eval" | "len";
-sexpression  : '(' <expression>* ')';
-qexpression  : '[' <expression>* ']';
-expression   : <number> | <symbol> | <sexpression> | <qexpression>;
-gg           : /^/ <expression>* /$/;

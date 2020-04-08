@@ -4,41 +4,29 @@
 
 #include "mpc.h"
 #include "util.h"
-#include "value.h"
+#include "object.h"
+#include "env.h"
 
 #define GG_VERSION "0.1.0"
 
-int main(int argc, char **argv)
+static void repl(Env *env, const mpc_parser_T *par)
 {
-	char *line, *grammar = readfile("src/grammar");
+	mpc_result_T res;
+	char *line;
 
-	mpc_parser_T *num = mpc_new("number");
-	mpc_parser_T *sym = mpc_new("symbol");
-	mpc_parser_T *sexpr = mpc_new("sexpression");
-	mpc_parser_T *qexpr = mpc_new("qexpression");
-	mpc_parser_T *expr = mpc_new("expression");
-	mpc_parser_T *gg = mpc_new("gg");
-
-	mpca_lang(MPCA_LANG_DEFAULT, grammar, num, sym, sexpr, qexpr, expr, gg);
-
-	free(grammar);
-
-	printf("GG %s\ntype \"quit\" to terminate\n", GG_VERSION);
+	printf("GG %s\ntype \"exit\" to terminate\n", GG_VERSION);
 
 	while ((line = readline("=> "))) {
-		if (strcmpws(line, "quit"))
-			break;
 		if (!*line) {
 			free(line);
 			continue;
 		}
 
-		mpc_result_T res;
-		if (mpc_parse("<stdin>", line, gg, &res)) {
-			Value *v = value_eval(value_read(res.output));
-			value_dump(v);
+		if (mpc_parse("<stdin>", line, (mpc_parser_T *)par, &res)) {
+			Object *obj = obj_eval(env, obj_read(res.output));
+			obj_dump(obj);
 			putchar('\n');
-			value_free(v);
+			obj_free(obj);
 			mpc_ast_delete(res.output);
 		} else {
 			mpc_err_print(res.error);
@@ -48,8 +36,32 @@ int main(int argc, char **argv)
 		add_history(line);
 		free(line);
 	}
+}
 
-	mpc_cleanup(6, num, sym, sexpr, qexpr, expr, gg);
+int main(int argc, char **argv)
+{
+	Env *env = env_new();
+	const mpc_parser_T
+		*num = mpc_new("number"),
+		*sym = mpc_new("symbol"),
+		*sexpr = mpc_new("sexpression"),
+		*bexpr = mpc_new("bexpression"),
+		*expr = mpc_new("expression"),
+		*gg = mpc_new("gg");
+
+	mpca_lang(MPCA_LANG_DEFAULT,
+		"number       : /-?\\.?\\d+\\.?\\d*/;"
+		"symbol       : /[a-zA-Z0-9_+\\-*\\/%^\\\\=<>!&@\\|~]+/;"
+		"sexpression  : '(' <expression>* ')';"
+		"bexpression  : '[' <expression>* ']';"
+		"expression   : <number> | <symbol> | <sexpression> | <bexpression>;"
+		"gg           : /^/ <expression>* /$/;", num, sym, sexpr, bexpr, expr, gg);
+
+	repl(env, gg);
+
+	env_free(env);
+
+	mpc_cleanup(6, num, sym, sexpr, bexpr, expr, gg);
 
 	return 0;
 }
