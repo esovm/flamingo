@@ -15,8 +15,7 @@ ListNode *list_node_new(void *val)
 
 ListIter *list_iter_new(List *list, ListDir dir)
 {
-    ListNode *node = dir == LIST_HEAD ? list->head : list->tail;
-    return list_iter_new_from_node(node, dir);
+    return list_iter_new_from_node(dir == LIST_HEAD ? list->head : list->tail, dir);
 }
 
 ListIter *list_iter_new_from_node(ListNode *node, ListDir dir)
@@ -124,7 +123,7 @@ ListNode *list_find(List *list, void *val)
     ListNode *node;
 
     while ((node = list_iter_next(it)))
-        if (val == node->val) {
+        if (node->val == val) {
             list_iter_free(it);
             return node;
         }
@@ -163,8 +162,7 @@ void list_remove(List *list, ListNode *node)
 void list_free(List *list)
 {
     size_t len = list->len;
-    ListNode *next;
-    ListNode *curr = list->head;
+    ListNode *next, *curr = list->head;
 
     while (len--) {
         next = curr->next;

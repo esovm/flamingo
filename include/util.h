@@ -5,6 +5,7 @@
 
 #define U_MIN(A, B) (((A) < (B)) ? (A) : (B))
 #define U_MAX(A, B) (((A) > (B)) ? (A) : (B))
+#define EQ(S1, S2) (strcmp(S1, S2) == 0)
 
 typedef enum {
 	S2D_SUCCESS,
@@ -21,4 +22,4 @@ str2dbl_errno str2dbl(double *, char *);
 char *trim(char *);
 char *readfile(const char *);
 
-#endif
+#endif /* UTIL_H */

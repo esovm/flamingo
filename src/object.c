@@ -9,8 +9,8 @@
 #include "env.h"
 
 /* these strings have to exactly match the `obj_type` enum elements */
-static const char *const obj_type_arr[] = {
-    "number", "error", "symbol", "function", "s-expression", "b-expression"
+const char *const obj_type_arr[] = {
+   "number", "error", "symbol", "function", "s-expression", "b-expression"
 };
 
 Object *obj_new_num(double n)
@@ -94,129 +94,6 @@ Object *obj_new_bexpr(void)
     ret->cell = NULL;
 
     return ret;
-}
-
-/* bi_ prefixed functions - bulit-ins */
-
-Object *bi_exit(Env *env, Object *obj)
-{
-    int status;
-
-    NARG("exit", obj, 1);
-    EXPECT("exit", obj, 0, O_NUMBER);
-
-    status = obj->cell[0]->r.number;
-
-    obj_free(obj);
-    env_free(env);
-
-    exit(status);
-}
-
-Object *bi_car(Env *env, Object *obj)
-{
-    NARG("car", obj, 1);
-    EXPECT("car", obj, 0, O_BEXPR);
-    OBJ_ENSURE(obj, obj->cell[0]->nelem, "car cannot operate on empty b-expression ('[]')");
-
-    Object *first = obj_take(obj, 0);
-    while (first->nelem > 1)
-        obj_free(obj_pop(first, 1));
-    return first;
-}
-
-Object *bi_cdr(Env *env, Object *obj)
-{
-    NARG("cdr", obj, 1);
-    EXPECT("cdr", obj, 0, O_BEXPR);
-    OBJ_ENSURE(obj, obj->cell[0]->nelem, "cdr cannot operate on empty b-expression ('[]')");
-
-    Object *first = obj_take(obj, 0);
-    obj_free(obj_pop(first, 0));
-    return first;
-}
-
-Object *bi_list(Env *env, Object *obj)
-{
-    obj->type = O_BEXPR;
-    return obj;
-}
-
-Object *bi_eval(Env *env, Object *obj)
-{
-    NARG("eval", obj, 1);
-    EXPECT("eval", obj, 0, O_BEXPR);
-
-    Object *ret = obj_take(obj, 0);
-    ret->type = O_SEXPR;
-    return obj_eval(env, ret);
-}
-
-Object *bi_attach(Env *env, Object *obj)
-{
-    for (size_t i = 0; i < obj->nelem; ++i)
-        EXPECT("attach", obj, i, O_BEXPR);
-
-    Object *ret = obj_pop(obj, 0);
-    while (obj->nelem)
-        ret = obj_attach(ret, obj_pop(obj, 0));
-
-    obj_free(obj);
-    return ret;
-}
-
-/* return b-expression without the last element */
-Object *bi_init(Env *env, Object *obj)
-{
-    NARG("init", obj, 1);
-    EXPECT("init", obj, 0, O_BEXPR);
-    OBJ_ENSURE(obj, obj->cell[0]->nelem, "init cannot operate on empty b-expression ('[]')");
-
-    Object *first = obj_take(obj, 0);
-    obj_free(obj_pop(first, first->nelem - 1));
-    return first;
-}
-
-Object *bi_var(Env *env, Object *list, const char *func)
-{
-    EXPECT(func, list, 0, O_BEXPR);
-
-    Object *symbols = list->cell[0];
-    for (size_t i = 0; i < symbols->nelem; ++i)
-        OBJ_ENSURE_F(list, symbols->cell[i]->type == O_SYMBOL, "can only define symbol (got %s)",
-            obj_type_arr[symbols->cell[i]->type]);
-
-    OBJ_ENSURE_F(list, symbols->nelem == list->nelem - 1,
-        "incorrect number of arguments (%d) for %s", list->nelem - 1, func);
-
-    for (size_t i = 0; i < symbols->nelem; ++i) {
-        if (*func == '=')
-            env_set(env, symbols->cell[i], list->cell[i + 1]);
-        else if (!strcmp("def", func))
-            env_set_global(env, symbols->cell[i], list->cell[i + 1]);
-    }
-
-    obj_free(list);
-
-    return obj_new_sexpr();
-}
-
-Object *bi_lambda(Env *env, Object *list)
-{
-    NARG("$", list, 2);
-    EXPECT("$", list, 0, O_BEXPR);
-    EXPECT("$", list, 1, O_BEXPR);
-
-    for (size_t i = 0; i < list->cell[0]->nelem; ++i)
-        OBJ_ENSURE_F(list, list->cell[0]->cell[i]->type == O_SYMBOL,
-            "can only define symbol. (got %s)", obj_type_arr[list->cell[i]->type]);
-
-    Object *params = obj_pop(list, 0);
-    Object *body = obj_pop(list, 0);
-
-    obj_free(list);
-
-    return obj_new_lambda(params, body);
 }
 
 Object *obj_append(Object *obj, Object *to_add)
@@ -308,7 +185,7 @@ Object *obj_read(mpc_ast_T *ast)
 			*ast->children[i]->contents == ')' ||
 		    *ast->children[i]->contents == '[' ||
 			*ast->children[i]->contents == ']' ||
-			!strcmp(ast->children[i]->tag, "regex"))
+			EQ(ast->children[i]->tag, "regex"))
 			continue;
 		v = obj_append(v, obj_read(ast->children[i]));
 	}
@@ -334,7 +211,7 @@ Object *obj_call(Env *env, Object *func, Object *list)
 
         Object *symbol = obj_pop(func->r.f.params, 0);
 
-        if (!strcmp(symbol->r.symbol, "@")) {
+        if (EQ(symbol->r.symbol, "@")) {
             if (func->r.f.params->nelem != 1) {
                 obj_free(list);
                 return obj_new_err("@ is missing a symbol");
@@ -379,90 +256,14 @@ Object *obj_call(Env *env, Object *func, Object *list)
     return obj_cp(func);
 }
 
-Object *process_op(Env *env, Object *list, const char *op)
-{
-    for (size_t i = 0; i < list->nelem; ++i)
-        EXPECT(op, list, i, O_NUMBER);
-
-    Object *a = obj_pop(list, 0);
-
-    if (*op == '-' && !list->nelem) a->r.number *= -1;
-    else if (*op == '~' && !list->nelem) a->r.number = ~(int)a->r.number;
-
-    while (list->nelem) {
-        Object *b = obj_pop(list, 0);
-
-        switch (*op) {
-        case '+': a->r.number += b->r.number; break;
-        case '-': a->r.number -= b->r.number; break;
-        case '*': a->r.number *= b->r.number; break;
-        case '/':
-            if (!b->r.number) {
-                obj_free(a);
-                obj_free(b);
-                a = obj_new_err("Division by 0 is undefined");
-                goto out;
-            }
-            a->r.number /= b->r.number;
-            break;
-        case '%': a->r.number = fmod(a->r.number, b->r.number); break;
-        case '^': a->r.number = (int)a->r.number ^ (int)b->r.number; break;
-        case '&': a->r.number = (int)a->r.number & (int)b->r.number; break;
-        case '|': a->r.number = (int)a->r.number | (int)b->r.number; break;
-        }
-
-        if (!strcmp(op, "pow")) a->r.number = pow(a->r.number, b->r.number);
-        if (!strcmp(op, "min")) a->r.number = U_MIN(a->r.number, b->r.number);
-        if (!strcmp(op, "max")) a->r.number = U_MAX(a->r.number, b->r.number);
-
-        obj_free(b);
-    }
-
-out:
-    obj_free(list);
-    return a;
-}
-
-/* relational operators */
-Object *process_rel(Env *env, Object *list, const char *op)
-{
-    NARG(op, list, 2);
-    if (strcmp(op, "==") && strcmp(op, "!=")) {
-        /* operands must be numbers only with <, <=, >, >= */
-        EXPECT(op, list, 0, O_NUMBER);
-        EXPECT(op, list, 1, O_NUMBER);
-    }
-
-    int r;
-    switch (*op) {
-    case '<':
-        r = op[1] == '='
-            ? list->cell[0]->r.number <= list->cell[1]->r.number
-            : list->cell[0]->r.number < list->cell[1]->r.number;
-        break;
-    case '>':
-        r = op[1] == '='
-            ? list->cell[0]->r.number >= list->cell[1]->r.number
-            : list->cell[0]->r.number > list->cell[1]->r.number;
-        break;
-    }
-    if (!strcmp(op, "=="))
-        r = obj_equal(list->cell[0], list->cell[1]);
-    else if (!strcmp(op, "!="))
-        r = !obj_equal(list->cell[0], list->cell[1]);
-
-    obj_free(list);
-    return obj_new_num(r);
-}
-
 bool obj_equal(Object *a, Object *b)
 {
     if (a->type != b->type) return false;
 
     switch (a->type) {
     case O_NUMBER: return a->r.number == b->r.number;
-    case O_SYMBOL: return !strcmp(a->r.symbol, b->r.symbol);
-    case O_ERROR: return !strcmp(a->r.error, b->r.error);
+    case O_SYMBOL: return EQ(a->r.symbol, b->r.symbol);
+    case O_ERROR: return EQ(a->r.error, b->r.error);
     case O_FUNC:
         return a->r.f.builtin || b->r.f.builtin
             ? a->r.f.builtin == b->r.f.builtin
@@ -474,8 +275,6 @@ bool obj_equal(Object *a, Object *b)
             if (!obj_equal(a->cell[i], b->cell[i])) return false;
         return true;
     }
-
-    return false;
 }
 
 Object *obj_eval_sexpr(Env *env, Object *obj);

@@ -31,6 +31,9 @@
     OBJ_ENSURE_F(OBJ, OBJ->nelem == n, "%s expected %d argument%s but got %d", \
                  ID, n, n != 1 ? "s" : "", OBJ->nelem);
 
+/* these strings have to exactly match the `obj_type` enum elements */
+extern const char *const obj_type_arr[];
+
 typedef struct Object Object;
 typedef struct Env Env;
 typedef Object *(*BuiltinFn)(Env *, Object *);
@@ -55,7 +58,7 @@ struct Object {
             Env *env;
             Object *params;
             Object *body;
-        } f; /* user-defined and built in functions */
+        } f; /* user-defined or built-in function */
     } r; /* result */
     /* s-expression */
     size_t nelem;
@@ -67,6 +70,8 @@ Object *obj_new_err(const char *fmt, ...);
 Object *obj_new_sym(const char *);
 Object *obj_new_func(BuiltinFn);
 Object *obj_new_lambda(Object *, Object *);
+Object *obj_new_sexpr(void);
+Object *obj_new_bexpr(void);
 
 Object *obj_read(mpc_ast_T *);
 Object *obj_eval(Env *, Object *);
@@ -82,16 +87,18 @@ bool obj_equal(Object *, Object *);
 
 Object *process_op(Env *, Object *, const char *);
 Object *process_rel(Env *, Object *, const char *);
-Object *bi_var(Env *, Object *, const char *);
+Object *process_log(Env *, Object *, const char *);
+Object *process_var(Env *, Object *, const char *);
 
 Object *bi_exit(Env *, Object *);
 Object *bi_list(Env *, Object *);
-Object *bi_car(Env *, Object *);
-Object *bi_cdr(Env *, Object *);
+Object *bi_first(Env *, Object *);
+Object *bi_rest(Env *, Object *);
 Object *bi_eval(Env *, Object *);
 Object *bi_attach(Env *, Object *);
 Object *bi_init(Env *, Object *);
 Object *bi_lambda(Env *, Object *);
+Object *bi_if(Env *, Object *);
 
 static inline Object *bi_add(Env *env, Object *obj) {
     return process_op(env, obj, "+");
@@ -147,13 +154,20 @@ static inline Object *bi_eq(Env *env, Object *obj) {
 static inline Object *bi_ne(Env *env, Object *obj) {
     return process_rel(env, obj, "!=");
 }
-/* global */
-static inline Object *bi_def(Env *env, Object *list) {
-    return bi_var(env, list, "def");
+static inline Object *bi_not(Env *env, Object *obj) {
+    return process_log(env, obj, "not");
 }
-/* local */
-static inline Object *bi_loc(Env *env, Object *list) {
-    return bi_var(env, list, "=");
+static inline Object *bi_or(Env *env, Object *obj) {
+    return process_log(env, obj, "or");
+}
+static inline Object *bi_and(Env *env, Object *obj) {
+    return process_log(env, obj, "and");
+}
+static inline Object *bi_def(Env *env, Object *list) { /* global */
+    return process_var(env, list, "def");
+}
+static inline Object *bi_loc(Env *env, Object *list) { /* local */
+    return process_var(env, list, "=");
 }
 
 #endif /* OBJECT_H */
