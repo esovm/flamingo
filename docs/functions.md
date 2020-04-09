@@ -2,7 +2,7 @@
 
 - **fn** - a helper function for defining functions.
     ```
-    def [fn] (> [params body] [def (car params) (> (cdr params) body)])
+    def [fn] ($ [params body] [def (car params) ($ (cdr params) body)])
     ```
     Example:
     ```

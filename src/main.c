@@ -36,6 +36,7 @@ static void repl(Env *env, const mpc_parser_T *par)
 		add_history(line);
 		free(line);
 	}
+    putchar('\n');
 }
 
 int main(int argc, char **argv)
@@ -51,7 +52,7 @@ int main(int argc, char **argv)
 
 	mpca_lang(MPCA_LANG_DEFAULT,
 		"number       : /-?\\.?\\d+\\.?\\d*/;"
-		"symbol       : /[a-zA-Z0-9_+\\-*\\/%^\\\\=<>!&@\\|~]+/;"
+		"symbol       : /[a-zA-Z0-9_+\\-*\\/%^\\\\=<>!&@\\|~$]+/;"
 		"sexpression  : '(' <expression>* ')';"
 		"bexpression  : '[' <expression>* ']';"
 		"expression   : <number> | <symbol> | <sexpression> | <bexpression>;"

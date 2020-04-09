@@ -99,9 +99,16 @@ void env_register_all(Env *env)
     env_register(env, "min", bi_min);
     env_register(env, "max", bi_max);
 
+    env_register(env, "<", bi_lt);
+    env_register(env, "<=", bi_le);
+    env_register(env, ">", bi_gt);
+    env_register(env, ">=", bi_ge);
+    env_register(env, "==", bi_eq);
+    env_register(env, "!=", bi_ne);
+
     env_register(env, "def", bi_def);
     env_register(env, "=", bi_loc);
-    env_register(env, ">", bi_lambda);
+    env_register(env, "$", bi_lambda);
 }
 
 void env_free(Env *env)

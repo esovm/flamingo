@@ -1,6 +1,8 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+#include <stdbool.h>
+
 #include "mpc.h"
 
 #define OBJ_ENSURE(OBJ, CONDITION, ERROR_STR)   \
@@ -48,14 +50,12 @@ struct Object {
         double number;
         char *error;
         char *symbol;
-
         struct {
             BuiltinFn builtin;
             Env *env;
             Object *params;
             Object *body;
         } f; /* user-defined and built in functions */
-
     } r; /* result */
     /* s-expression */
     size_t nelem;
@@ -78,8 +78,10 @@ Object *obj_append(Object *, Object *);
 Object *obj_cp(Object *);
 Object *obj_take(Object *, size_t);
 Object *obj_pop(Object *, size_t);
+bool obj_equal(Object *, Object *);
 
 Object *process_op(Env *, Object *, const char *);
+Object *process_rel(Env *, Object *, const char *);
 Object *bi_var(Env *, Object *, const char *);
 
 Object *bi_exit(Env *, Object *);
@@ -91,62 +93,66 @@ Object *bi_attach(Env *, Object *);
 Object *bi_init(Env *, Object *);
 Object *bi_lambda(Env *, Object *);
 
-static inline Object *bi_add(Env *env, Object *obj)
-{
+static inline Object *bi_add(Env *env, Object *obj) {
     return process_op(env, obj, "+");
 }
-static inline Object *bi_sub(Env *env, Object *obj)
-{
+static inline Object *bi_sub(Env *env, Object *obj) {
     return process_op(env, obj, "-");
 }
-static inline Object *bi_mul(Env *env, Object *obj)
-{
+static inline Object *bi_mul(Env *env, Object *obj) {
     return process_op(env, obj, "*");
 }
-static inline Object *bi_div(Env *env, Object *obj)
-{
+static inline Object *bi_div(Env *env, Object *obj) {
     return process_op(env, obj, "/");
 }
-static inline Object *bi_mod(Env *env, Object *obj)
-{
+static inline Object *bi_mod(Env *env, Object *obj) {
     return process_op(env, obj, "%");
 }
-static inline Object *bi_bxor(Env *env, Object *obj)
-{
+static inline Object *bi_bxor(Env *env, Object *obj) {
     return process_op(env, obj, "^");
 }
-static inline Object *bi_band(Env *env, Object *obj)
-{
+static inline Object *bi_band(Env *env, Object *obj) {
     return process_op(env, obj, "&");
 }
-static inline Object *bi_bor(Env *env, Object *obj)
-{
+static inline Object *bi_bor(Env *env, Object *obj) {
     return process_op(env, obj, "|");
 }
-static inline Object *bi_bnot(Env *env, Object *obj)
-{
+static inline Object *bi_bnot(Env *env, Object *obj) {
     return process_op(env, obj, "~");
 }
-static inline Object *bi_pow(Env *env, Object *obj)
-{
+static inline Object *bi_pow(Env *env, Object *obj) {
     return process_op(env, obj, "pow");
 }
-static inline Object *bi_min(Env *env, Object *obj)
-{
+static inline Object *bi_min(Env *env, Object *obj) {
     return process_op(env, obj, "min");
 }
-static inline Object *bi_max(Env *env, Object *obj)
-{
+static inline Object *bi_max(Env *env, Object *obj) {
     return process_op(env, obj, "max");
 }
+static inline Object *bi_lt(Env *env, Object *obj) {
+    return process_rel(env, obj, "<");
+}
+static inline Object *bi_le(Env *env, Object *obj) {
+    return process_rel(env, obj, "<=");
+}
+static inline Object *bi_gt(Env *env, Object *obj) {
+    return process_rel(env, obj, ">");
+}
+static inline Object *bi_ge(Env *env, Object *obj) {
+    return process_rel(env, obj, ">=");
+}
+static inline Object *bi_eq(Env *env, Object *obj) {
+    return process_rel(env, obj, "==");
+}
+static inline Object *bi_ne(Env *env, Object *obj) {
+    return process_rel(env, obj, "!=");
+}
 /* global */
-static inline Object *bi_def(Env *env, Object *list)
-{
+static inline Object *bi_def(Env *env, Object *list) {
     return bi_var(env, list, "def");
 }
 /* local */
-static inline Object *bi_loc(Env *env, Object *list)
-{
+static inline Object *bi_loc(Env *env, Object *list) {
     return bi_var(env, list, "=");
 }
 

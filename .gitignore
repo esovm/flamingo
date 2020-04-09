@@ -1,6 +1,6 @@
-.vscode/*
-!.vscode/settings.json
+.vscode/
 build/
-gg
 *.out
+gg
 .DS_Store
+.clocignore

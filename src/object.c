@@ -190,7 +190,7 @@ Object *bi_var(Env *env, Object *list, const char *func)
         "incorrect number of arguments (%d) for %s", list->nelem - 1, func);
 
     for (size_t i = 0; i < symbols->nelem; ++i) {
-        if (!strcmp("=", func))
+        if (*func == '=')
             env_set(env, symbols->cell[i], list->cell[i + 1]);
         else if (!strcmp("def", func))
             env_set_global(env, symbols->cell[i], list->cell[i + 1]);
@@ -203,9 +203,9 @@ Object *bi_var(Env *env, Object *list, const char *func)
 
 Object *bi_lambda(Env *env, Object *list)
 {
-    NARG(">", list, 2);
-    EXPECT(">", list, 0, O_BEXPR);
-    EXPECT(">", list, 1, O_BEXPR);
+    NARG("$", list, 2);
+    EXPECT("$", list, 0, O_BEXPR);
+    EXPECT("$", list, 1, O_BEXPR);
 
     for (size_t i = 0; i < list->cell[0]->nelem; ++i)
         OBJ_ENSURE_F(list, list->cell[0]->cell[i]->type == O_SYMBOL,
@@ -218,13 +218,6 @@ Object *bi_lambda(Env *env, Object *list)
 
     return obj_new_lambda(params, body);
 }
-
-// def [fn] (> [params body] [def (car params) (> (cdr params) body)])
-
-// Object *bi_fn(Env *env, Object *list)
-// {
-
-// }
 
 Object *obj_append(Object *obj, Object *to_add)
 {
@@ -305,16 +298,16 @@ Object *obj_read(mpc_ast_T *ast)
 	if (strstr(ast->tag, "number")) return obj_read_num(ast);
 	if (strstr(ast->tag, "symbol")) return obj_new_sym(ast->contents);
 
-	if (!strcmp(ast->tag, ">") || strstr(ast->tag, "sexpression"))
+	if (*ast->tag == '>' || strstr(ast->tag, "sexpression"))
 		v = obj_new_sexpr();
 	if (strstr(ast->tag, "bexpression"))
 		v = obj_new_bexpr();
 
 	for (int i = 0; i < ast->children_num; ++i) {
-		if (!strcmp(ast->children[i]->contents, "(") ||
-			!strcmp(ast->children[i]->contents, ")") ||
-		    !strcmp(ast->children[i]->contents, "[") ||
-			!strcmp(ast->children[i]->contents, "]") ||
+		if (*ast->children[i]->contents == '(' ||
+			*ast->children[i]->contents == ')' ||
+		    *ast->children[i]->contents == '[' ||
+			*ast->children[i]->contents == ']' ||
 			!strcmp(ast->children[i]->tag, "regex"))
 			continue;
 		v = obj_append(v, obj_read(ast->children[i]));
@@ -430,6 +423,61 @@ out:
     return a;
 }
 
+/* relational operators */
+Object *process_rel(Env *env, Object *list, const char *op)
+{
+    NARG(op, list, 2);
+    if (strcmp(op, "==") && strcmp(op, "!=")) {
+        /* operands must be numbers only with <, <=, >, >= */
+        EXPECT(op, list, 0, O_NUMBER);
+        EXPECT(op, list, 1, O_NUMBER);
+    }
+
+    int r;
+    switch (*op) {
+    case '<':
+        r = op[1] == '='
+            ? list->cell[0]->r.number <= list->cell[1]->r.number
+            : list->cell[0]->r.number < list->cell[1]->r.number;
+        break;
+    case '>':
+        r = op[1] == '='
+            ? list->cell[0]->r.number >= list->cell[1]->r.number
+            : list->cell[0]->r.number > list->cell[1]->r.number;
+        break;
+    }
+    if (!strcmp(op, "=="))
+        r = obj_equal(list->cell[0], list->cell[1]);
+    else if (!strcmp(op, "!="))
+        r = !obj_equal(list->cell[0], list->cell[1]);
+
+    obj_free(list);
+    return obj_new_num(r);
+}
+
+bool obj_equal(Object *a, Object *b)
+{
+    if (a->type != b->type) return false;
+
+    switch (a->type) {
+    case O_NUMBER: return a->r.number == b->r.number;
+    case O_SYMBOL: return !strcmp(a->r.symbol, b->r.symbol);
+    case O_ERROR: return !strcmp(a->r.error, b->r.error);
+    case O_FUNC:
+        return a->r.f.builtin || b->r.f.builtin
+            ? a->r.f.builtin == b->r.f.builtin
+            : obj_equal(a->r.f.params, b->r.f.params) && obj_equal(a->r.f.body, b->r.f.body);
+    case O_SEXPR:
+    case O_BEXPR:
+        if (a->nelem != b->nelem) return false;
+        for (size_t i = 0; i < a->nelem; ++i)
+            if (!obj_equal(a->cell[i], b->cell[i])) return false;
+        return true;
+    }
+
+    return false;
+}
+
 Object *obj_eval_sexpr(Env *env, Object *obj);
 
 Object *obj_eval(Env *env, Object *obj)
@@ -491,7 +539,7 @@ void obj_dump(Object *obj)
         if (obj->r.f.builtin) {
             printf("<built-in function>");
         } else {
-            fputs("(> ", stdout);
+            fputs("($ ", stdout);
             obj_dump(obj->r.f.params);
             putchar(' ');
             obj_dump(obj->r.f.body);
