@@ -27,9 +27,11 @@
     OBJ_ENSURE_F(OBJ, OBJ->cell[I]->type == EXPECTED, "%s expected %s but got %s", \
                  ID, obj_type_arr[EXPECTED], obj_type_arr[OBJ->cell[I]->type]);
 
-#define NARG(ID, OBJ, n)                                                       \
-    OBJ_ENSURE_F(OBJ, OBJ->nelem == n, "%s expected %d argument%s but got %d", \
-                 ID, n, n != 1 ? "s" : "", OBJ->nelem);
+#define NARG(ID, OBJ, N)                                                       \
+    OBJ_ENSURE_F(OBJ, OBJ->nelem == N, "%s expected %d argument%s but got %d", \
+                 ID, N, N != 1 ? "s" : "", OBJ->nelem);
+
+extern mpc_parser_T *gg;
 
 /* these strings have to exactly match the `obj_type` enum elements */
 extern const char *const obj_type_arr[];
@@ -42,6 +44,7 @@ typedef enum {
     O_NUMBER,
     O_ERROR,
     O_SYMBOL,
+    O_STRING,
     O_FUNC,
     O_SEXPR,
     O_BEXPR
@@ -53,6 +56,7 @@ struct Object {
         double number;
         char *error;
         char *symbol;
+        char *string;
         struct {
             BuiltinFn builtin;
             Env *env;
@@ -68,6 +72,7 @@ struct Object {
 Object *obj_new_num(double);
 Object *obj_new_err(const char *fmt, ...);
 Object *obj_new_sym(const char *);
+Object *obj_new_str(const char *);
 Object *obj_new_func(BuiltinFn);
 Object *obj_new_lambda(Object *, Object *);
 Object *obj_new_sexpr(void);
@@ -99,6 +104,8 @@ Object *bi_attach(Env *, Object *);
 Object *bi_init(Env *, Object *);
 Object *bi_lambda(Env *, Object *);
 Object *bi_if(Env *, Object *);
+Object *bi_use(Env *, Object *);
+Object *bi_show(Env *, Object *);
 
 static inline Object *bi_add(Env *env, Object *obj) {
     return process_op(env, obj, "+");

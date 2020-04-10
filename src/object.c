@@ -10,7 +10,7 @@
 
 /* these strings have to exactly match the `obj_type` enum elements */
 const char *const obj_type_arr[] = {
-   "number", "error", "symbol", "function", "s-expression", "b-expression"
+   "number", "error", "symbol", "string", "function", "s-expression", "b-expression"
 };
 
 Object *obj_new_num(double n)
@@ -47,6 +47,16 @@ Object *obj_new_sym(const char *s)
 
     ret->type = O_SYMBOL;
     ret->r.symbol = dupstr(s);
+
+    return ret;
+}
+
+Object *obj_new_str(const char *s)
+{
+    Object *ret = s_malloc(sizeof(Object));
+
+    ret->type = O_STRING;
+    ret->r.string = dupstr(s);
 
     return ret;
 }
@@ -114,7 +124,6 @@ Object *obj_attach(Object *obj, Object *obj2)
 Object *obj_pop(Object *obj, size_t idx)
 {
     Object *elem = obj->cell[idx];
-
     memmove(&obj->cell[idx], &obj->cell[idx + 1], sizeof(Object *) * (obj->nelem-- - idx - 1));
     obj->cell = s_realloc(obj->cell, sizeof(Object *) * obj->nelem);
     return elem;
@@ -137,6 +146,7 @@ Object *obj_cp(Object *obj)
     case O_NUMBER: ret->r.number = obj->r.number; break;
     case O_ERROR: ret->r.error = dupstr(obj->r.error); break;
     case O_SYMBOL: ret->r.symbol = dupstr(obj->r.symbol); break;
+    case O_STRING: ret->r.string = dupstr(obj->r.string); break;
     case O_FUNC:
         if (obj->r.f.builtin == NULL) {
             ret->r.f.builtin = NULL;
@@ -164,33 +174,42 @@ Object *obj_read_num(mpc_ast_T *ast)
 	double n;
 	str2dbl(&n, ast->contents);
 	return errno == ERANGE
-		? obj_new_err("Invalid number. Possibly out of range for double")
+		? obj_new_err("Invalid number. Possibly out of range for a C double")
 		: obj_new_num(n);
+}
+
+Object *obj_read_str(mpc_ast_T *ast)
+{
+    ast->contents[strlen(ast->contents) - 1] = '\0'; /* remove closing quote */
+    char *s = mpcf_unescape(dupstr(ast->contents + 1)); /* + 1 to skip opening quote */
+    Object *ret = obj_new_str(s);
+    free(s);
+    return ret;
 }
 
 Object *obj_read(mpc_ast_T *ast)
 {
-	Object *v = NULL;
+	Object *obj = NULL;
 
 	if (strstr(ast->tag, "number")) return obj_read_num(ast);
 	if (strstr(ast->tag, "symbol")) return obj_new_sym(ast->contents);
+	if (strstr(ast->tag, "string")) return obj_read_str(ast);
 
-	if (*ast->tag == '>' || strstr(ast->tag, "sexpression"))
-		v = obj_new_sexpr();
-	if (strstr(ast->tag, "bexpression"))
-		v = obj_new_bexpr();
+	if (*ast->tag == '>' || strstr(ast->tag, "sexpression")) obj = obj_new_sexpr();
+	if (strstr(ast->tag, "bexpression")) obj = obj_new_bexpr();
 
 	for (int i = 0; i < ast->children_num; ++i) {
-		if (*ast->children[i]->contents == '(' ||
-			*ast->children[i]->contents == ')' ||
-		    *ast->children[i]->contents == '[' ||
-			*ast->children[i]->contents == ']' ||
+		if (*ast->children[i]->contents == '('       ||
+			*ast->children[i]->contents == ')'       ||
+		    *ast->children[i]->contents == '['       ||
+			*ast->children[i]->contents == ']'       ||
+			strstr(ast->children[i]->tag, "comment") ||
 			EQ(ast->children[i]->tag, "regex"))
 			continue;
-		v = obj_append(v, obj_read(ast->children[i]));
+		obj = obj_append(obj, obj_read(ast->children[i]));
 	}
 
-	return v;
+	return obj;
 }
 
 Object *obj_call(Env *env, Object *func, Object *list)
@@ -198,9 +217,7 @@ Object *obj_call(Env *env, Object *func, Object *list)
     if (func->r.f.builtin)
         return func->r.f.builtin(env, list);
 
-    size_t
-        given = list->nelem,
-        total = func->r.f.params->nelem;
+    size_t given = list->nelem, total = func->r.f.params->nelem;
 
     while (list->nelem) {
         if (!func->r.f.params->nelem) {
@@ -263,6 +280,7 @@ bool obj_equal(Object *a, Object *b)
     switch (a->type) {
     case O_NUMBER: return a->r.number == b->r.number;
     case O_SYMBOL: return EQ(a->r.symbol, b->r.symbol);
+    case O_STRING: return EQ(a->r.string, b->r.string);
     case O_ERROR: return EQ(a->r.error, b->r.error);
     case O_FUNC:
         return a->r.f.builtin || b->r.f.builtin
@@ -328,12 +346,20 @@ void obj_dump_expr(Object *obj, char open, char close)
     putchar(close);
 }
 
+void obj_dump_str(Object *obj)
+{
+    char *s = mpcf_escape(dupstr(obj->r.string));
+    printf("'%s'", s);
+    free(s);
+}
+
 void obj_dump(Object *obj)
 {
     switch (obj->type) {
     case O_NUMBER: printf("%g", obj->r.number); break;
     case O_ERROR: printf("Error: %s", obj->r.error); break;
-    case O_SYMBOL: printf("%s", obj->r.symbol); break;
+    case O_SYMBOL: fputs(obj->r.symbol, stdout); break;
+    case O_STRING: obj_dump_str(obj); break;
     case O_FUNC:
         if (obj->r.f.builtin) {
             printf("<built-in function>");
@@ -355,8 +381,9 @@ void obj_free(Object *obj)
     switch (obj->type) {
     case O_ERROR: free(obj->r.error); break;
     case O_SYMBOL: free(obj->r.symbol); break;
+    case O_STRING: free(obj->r.string); break;
     case O_FUNC:
-        if (obj->r.f.builtin == NULL) {
+        if (!obj->r.f.builtin) {
             env_free(obj->r.f.env);
             obj_free(obj->r.f.params);
             obj_free(obj->r.f.body);

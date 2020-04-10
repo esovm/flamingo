@@ -143,3 +143,46 @@ Object *bi_if(Env *env, Object *list)
     obj_free(list);
     return ret;
 }
+
+Object *bi_use(Env *env, Object *list)
+{
+    NARG("use", list, 1);
+    EXPECT("use", list, 0, O_STRING);
+
+    mpc_result_T res;
+    if (mpc_parse_contents(list->cell[0]->r.string, gg, &res)) {
+        Object *expression = obj_read(res.output);
+        mpc_ast_delete(res.output);
+
+        while (expression->nelem) {
+            Object *a;
+            if ((a = obj_eval(env, obj_pop(expression, 0)))->type == O_ERROR) {
+                obj_dump(a);
+                putchar('\n');
+            }
+            obj_free(a);
+        }
+        obj_free(expression);
+        obj_free(list);
+
+        return obj_new_sexpr();
+    }
+
+    char *msg = mpc_err_string(res.error);
+    mpc_err_delete(res.error);
+    Object *error = obj_new_err("Cannot use file %s", msg);
+    free(msg);
+    obj_free(list);
+    return error;
+}
+
+Object *bi_show(Env *env, Object *list)
+{
+    for (size_t i = 0; i < list->nelem; ++i) {
+        obj_dump(list->cell[i]);
+        putchar(' ');
+    }
+    putchar('\n');
+    obj_free(list);
+    return obj_new_sexpr();
+}

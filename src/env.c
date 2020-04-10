@@ -114,6 +114,9 @@ void env_register_all(Env *env)
     env_register(env, "def", bi_def);
     env_register(env, "=", bi_loc);
     env_register(env, "$", bi_lambda);
+
+    env_register(env, "use", bi_use);
+    env_register(env, "show", bi_show);
 }
 
 void env_free(Env *env)
