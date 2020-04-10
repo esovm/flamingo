@@ -1,0 +1,58 @@
+###########################################################
+###############   Crane standard library   ###############
+##########################################################
+
+### constants
+
+(def [false] 0)
+(def [true] (not false))
+(def [null] [])
+
+### functions
+
+# a helper function for defining functions.
+(def [fn] ($ [params body] [
+  def (first params) ($ (rest params) body)
+]))
+
+# pack arguments `args` to a list and call function `func` on it.
+(fn [pack func @ args] [func args])
+
+# unpack list `l` and call function `func` with its arguments.
+(fn [unpack func l] [eval (attach [func] l)])
+
+# return the first, second and third element of list `l`.
+(fn [st l] [eval (first l)])
+(fn [nd l] [eval (first (rest l))])
+(fn [rd l] [eval (first (rest (rest l)))])
+
+# return the length (i.e. number of elements) of list `l`.
+(fn [len l] [
+  if (== l null)
+    [0]
+    [+ 1 (len (rest l))]
+])
+
+# return the n-th element of list `l`.
+(fn [n-th n l] [
+  if (not n)
+    [st l]
+    [n-th (- n 1) (rest l)]
+])
+
+# apply function `func` on each element of list `l`.
+(fn [map func l] [
+  if (== l null)
+    [null]
+    [attach (list (func (st l))) (map func (rest l))]
+])
+
+# evaluate expressions in `l` from left to right and return last one
+(fn [do & l] [
+  if (== l null) [null] [last l]
+])
+
+# create a new, more local scope
+(fn [let b] [(
+  ($ [_] b) ()
+)])

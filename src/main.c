@@ -61,7 +61,7 @@ int main(int argc, char **argv)
         "sexpression  : '(' <expression>* ')';"
         "bexpression  : '[' <expression>* ']';"
         "expression   : <comment> | <number> | <symbol> | <string> | <sexpression> | <bexpression>;"
-        "crane           : /^/ <expression>* /$/;", com, num, sym, str, sexpr, bexpr, expr, crane);
+        "crane        : /^/ <expression>* /$/;", com, num, sym, str, sexpr, bexpr, expr, crane);
 
     if (argc == 1) {
         repl(env, crane);

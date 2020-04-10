@@ -22,21 +22,21 @@
     => attach [1 2] (pack attach 3 4 5)
     [1 2 3 4 5]
     ```
-- **unpack** - unpack list `lst` and call `function` with its arguments.
+- **unpack** - unpack list `l` and call `function` with its arguments.
     ```
-    fn [unpack function lst] [eval (attach [function] lst)]
+    fn [unpack function l] [eval (attach [function] l)]
     ```
     Example:
     ```
     => unpack max [104.5 3.14 786 2]
     786
     ```
-- **len** - return the length (i.e. the number of elements) of list `lst`.
+- **len** - return the length (i.e. the number of elements) of list `l`.
     ```
-    fn [len lst] [
-        if (== lst [])
+    fn [len l] [
+        if (== l [])
         [0]
-        [+ 1 (len (rest lst))]
+        [+ 1 (len (rest l))]
     ]
     ```
     Example:
@@ -46,12 +46,12 @@
     => len primes
     5
     ```
-- **rev** - reverse list `lst`.
+- **rev** - reverse list `l`.
     ```
-    fn [rev lst] [
-        if (== lst [])
+    fn [rev l] [
+        if (== l [])
         [[]]
-        [attach (rev (rest lst)) (first lst)]
+        [attach (rev (rest l)) (first l)]
     ]
     ```
     Example:

@@ -12,3 +12,7 @@ indent_style = tab
 [*.{c, h}]
 indent_style = space
 indent_size = 4
+
+[*.crn]
+indent_style = space
+indent_size = 2

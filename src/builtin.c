@@ -169,8 +169,13 @@ Object *bi_use(Env *env, Object *list)
     NARG("use", list, 1);
     EXPECT("use", list, 0, O_STRING);
 
+    /* + 5 for '.crn' extension and null terminator */
+    char *fn = s_malloc(strlen(list->cell[0]->r.string) + 5);
+    strcpy(fn, list->cell[0]->r.string);
+    strcat(fn, ".crn");
+
     mpc_result_T res;
-    if (mpc_parse_contents(list->cell[0]->r.string, crane, &res)) {
+    if (mpc_parse_contents(fn, crane, &res)) {
         Object *expression = obj_read(res.output);
         mpc_ast_delete(res.output);
 
@@ -182,6 +187,8 @@ Object *bi_use(Env *env, Object *list)
             }
             obj_free(a);
         }
+
+        free(fn);
         obj_free(expression);
         obj_free(list);
 
