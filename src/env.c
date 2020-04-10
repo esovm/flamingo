@@ -81,6 +81,7 @@ void env_register_all(Env *env)
 
     env_register(env, "list", bi_list);
     env_register(env, "first", bi_first);
+    env_register(env, "last", bi_last);
     env_register(env, "rest", bi_rest);
     env_register(env, "eval", bi_eval);
     env_register(env, "attach", bi_attach);

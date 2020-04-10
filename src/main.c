@@ -7,16 +7,16 @@
 #include "object.h"
 #include "env.h"
 
-#define GG_VERSION "0.1.0"
+#define CRANE_VERSION "0.1.0"
 
-mpc_parser_T *com, *num, *sym, *str, *sexpr, *bexpr, *expr, *gg;
+mpc_parser_T *com, *num, *sym, *str, *sexpr, *bexpr, *expr, *crane;
 
 static void repl(Env *env, mpc_parser_T *par)
 {
     mpc_result_T res;
     char *line;
 
-    printf("GG %s\ntype \"exit\" to terminate\n", GG_VERSION);
+    printf("Crane %s\ntype \"exit\" to terminate\n", CRANE_VERSION);
 
     while ((line = readline("=> "))) {
         if (!*line) {
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     sexpr = mpc_new("sexpression");
     bexpr = mpc_new("bexpression");
     expr = mpc_new("expression");
-    gg = mpc_new("gg");
+    crane = mpc_new("crane");
 
     mpca_lang(MPCA_LANG_DEFAULT,
         "comment      : /#[^\\r\\n]*/;"
@@ -61,10 +61,10 @@ int main(int argc, char **argv)
         "sexpression  : '(' <expression>* ')';"
         "bexpression  : '[' <expression>* ']';"
         "expression   : <comment> | <number> | <symbol> | <string> | <sexpression> | <bexpression>;"
-        "gg           : /^/ <expression>* /$/;", com, num, sym, str, sexpr, bexpr, expr, gg);
+        "crane           : /^/ <expression>* /$/;", com, num, sym, str, sexpr, bexpr, expr, crane);
 
     if (argc == 1) {
-        repl(env, gg);
+        repl(env, crane);
     } else {
         for (int i = 1; i < argc; ++i) {
             Object *r, *args = obj_append(obj_new_sexpr(), obj_new_str(argv[i]));
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
     }
 
     env_free(env);
-    mpc_cleanup(8, com, num, sym, str, sexpr, bexpr, expr, gg);
+    mpc_cleanup(8, com, num, sym, str, sexpr, bexpr, expr, crane);
 
     return 0;
 }

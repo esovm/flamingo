@@ -1,6 +1,6 @@
 .vscode/
 build/
 *.out
-gg
+crane
 .DS_Store
 .clocignore

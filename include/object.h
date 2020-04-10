@@ -31,7 +31,7 @@
     OBJ_ENSURE_F(OBJ, OBJ->nelem == N, "%s expected %d argument%s but got %d", \
                  ID, N, N != 1 ? "s" : "", OBJ->nelem);
 
-extern mpc_parser_T *gg;
+extern mpc_parser_T *crane;
 
 /* these strings have to exactly match the `obj_type` enum elements */
 extern const char *const obj_type_arr[];
@@ -98,6 +98,7 @@ Object *process_var(Env *, Object *, const char *);
 Object *bi_exit(Env *, Object *);
 Object *bi_list(Env *, Object *);
 Object *bi_first(Env *, Object *);
+Object *bi_last(Env *, Object *);
 Object *bi_rest(Env *, Object *);
 Object *bi_eval(Env *, Object *);
 Object *bi_attach(Env *, Object *);

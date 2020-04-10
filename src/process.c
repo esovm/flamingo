@@ -5,6 +5,7 @@
 /* math operators */
 Object *process_op(Env *env, Object *list, const char *op)
 {
+    (void)env;
     for (size_t i = 0; i < list->nelem; ++i)
         EXPECT(op, list, i, O_NUMBER);
 
@@ -50,6 +51,7 @@ out:
 /* relational operators */
 Object *process_rel(Env *env, Object *list, const char *op)
 {
+    (void)env;
     NARG(op, list, 2);
     if (strcmp(op, "==") && strcmp(op, "!=")) {
         /* operands must be numbers only with <, <=, >, >= */
@@ -82,6 +84,7 @@ Object *process_rel(Env *env, Object *list, const char *op)
 /* logical operators */
 Object *process_log(Env *env, Object *list, const char *op)
 {
+    (void)env;
     for (size_t i = 0; i < list->nelem; ++i)
         EXPECT(op, list, i, O_NUMBER);
 

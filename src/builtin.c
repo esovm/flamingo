@@ -22,6 +22,7 @@ Object *bi_exit(Env *env, Object *obj)
 /* return the first element of a b-expression */
 Object *bi_first(Env *env, Object *obj)
 {
+    (void)env;
     NARG("first", obj, 1);
     EXPECT("first", obj, 0, O_BEXPR);
     OBJ_ENSURE(obj, obj->cell[0]->nelem, "first cannot operate on empty b-expression ('[]')");
@@ -32,9 +33,24 @@ Object *bi_first(Env *env, Object *obj)
     return first;
 }
 
+/* return the last element of a b-expression */
+Object *bi_last(Env *env, Object *obj)
+{
+    (void)env;
+    NARG("last", obj, 1);
+    EXPECT("last", obj, 0, O_BEXPR);
+    OBJ_ENSURE(obj, obj->cell[0]->nelem, "last cannot operate on empty b-expression ('[]')");
+
+    Object *last = obj_take(obj, obj->nelem - 1);
+    while (last->nelem > 1)
+        obj_free(obj_pop(last, 0));
+    return last;
+}
+
 /* return a b-expression without its first element */
 Object *bi_rest(Env *env, Object *obj)
 {
+    (void)env;
     NARG("rest", obj, 1);
     EXPECT("rest", obj, 0, O_BEXPR);
     OBJ_ENSURE(obj, obj->cell[0]->nelem, "rest cannot operate on empty b-expression ('[]')");
@@ -46,6 +62,7 @@ Object *bi_rest(Env *env, Object *obj)
 
 Object *bi_list(Env *env, Object *obj)
 {
+    (void)env;
     obj->type = O_BEXPR;
     return obj;
 }
@@ -62,6 +79,7 @@ Object *bi_eval(Env *env, Object *obj)
 
 Object *bi_attach(Env *env, Object *obj)
 {
+    (void)env;
     for (size_t i = 0; i < obj->nelem; ++i)
         EXPECT("attach", obj, i, O_BEXPR);
 
@@ -76,6 +94,7 @@ Object *bi_attach(Env *env, Object *obj)
 /* return b-expression without the last element */
 Object *bi_init(Env *env, Object *obj)
 {
+    (void)env;
     NARG("init", obj, 1);
     EXPECT("init", obj, 0, O_BEXPR);
     OBJ_ENSURE(obj, obj->cell[0]->nelem, "init cannot operate on empty b-expression ('[]')");
@@ -111,6 +130,7 @@ Object *bi_var(Env *env, Object *list, const char *func)
 
 Object *bi_lambda(Env *env, Object *list)
 {
+    (void)env;
     NARG("$", list, 2);
     EXPECT("$", list, 0, O_BEXPR);
     EXPECT("$", list, 1, O_BEXPR);
@@ -150,7 +170,7 @@ Object *bi_use(Env *env, Object *list)
     EXPECT("use", list, 0, O_STRING);
 
     mpc_result_T res;
-    if (mpc_parse_contents(list->cell[0]->r.string, gg, &res)) {
+    if (mpc_parse_contents(list->cell[0]->r.string, crane, &res)) {
         Object *expression = obj_read(res.output);
         mpc_ast_delete(res.output);
 
@@ -178,6 +198,7 @@ Object *bi_use(Env *env, Object *list)
 
 Object *bi_show(Env *env, Object *list)
 {
+    (void)env;
     for (size_t i = 0; i < list->nelem; ++i) {
         obj_dump(list->cell[i]);
         putchar(' ');
