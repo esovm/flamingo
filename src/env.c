@@ -12,8 +12,6 @@ Env *env_new(void)
     ret->obj_list = NULL;
     ret->parent = NULL;
 
-    env_register_all(ret);
-
     return ret;
 }
 

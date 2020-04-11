@@ -3,6 +3,8 @@
 ### constants
 
 (def [null] [])
+(def [false] 0)
+(def [true] (not false))
 
 ### functions
 

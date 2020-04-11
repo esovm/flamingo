@@ -83,7 +83,6 @@ Object *obj_new_sexpr(void);
 Object *obj_new_bexpr(void);
 
 Object *obj_read_expr(char *, size_t *, char);
-Object *obj_read(char *, size_t *);
 Object *obj_eval(Env *, Object *);
 void obj_dump(Object *);
 void obj_free(Object *);
