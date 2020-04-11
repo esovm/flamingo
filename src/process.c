@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "object.h"
 #include "env.h"
 #include "util.h"

@@ -1,5 +1,5 @@
 CFLAGS := -std=c99 -Wall -Wextra -pedantic -Iinclude
-LDLIBS = -ledit
+LDLIBS = -ledit -lm
 
 ifeq ($(MODE), debug)
 	CFLAGS += -O0 -g
@@ -16,7 +16,7 @@ OBJS := $(addprefix $(BUILDDIR)/$(NAME)/, $(notdir $(SRCS:.c=.o)))
 build/$(NAME): $(OBJS)
 	@printf "%8s %-40s %s\n" $(CC) $@ "$(CFLAGS)"
 	@mkdir -p build
-	@$(CC) $(LDLIBS) $(CFLAGS) $^ -o $@
+	@$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
 
 $(BUILDDIR)/$(NAME)/%.o: $(SRCDIR)/%.c $(HDRS)
 	@printf "%8s %-40s %s\n" $(CC) $< "$(CFLAGS)"

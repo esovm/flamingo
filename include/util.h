@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef FLAMINGO_UTIL_H
+#define FLAMINGO_UTIL_H
 
 #include <stddef.h>
 #include <string.h>
@@ -24,4 +24,4 @@ char *trim(char *);
 char *xreadfile(const char *); /* deadly, will quit on failure */
 char *readfile(const char *);
 
-#endif /* UTIL_H */
+#endif /* FLAMINGO_UTIL_H */

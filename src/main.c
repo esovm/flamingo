@@ -21,9 +21,8 @@ static void repl(Env *env)
         }
 
         size_t pos = 0;
-        Object e;
-        obj_read_expr(&e, line, &pos, '\0');
-        Object *obj = obj_eval(env, &e);
+        Object *e = obj_read_expr(line, &pos, '\0'),
+            *obj = obj_eval(env, e);
         obj_dump(obj);
         putchar('\n');
         obj_free(obj);
@@ -43,8 +42,10 @@ int main(int argc, char **argv)
     } else {
         for (int i = 1; i < argc; ++i) {
             Object *r, *args = obj_append(obj_new_sexpr(), obj_new_str(argv[i]));
-            if ((r = bi_use(env, args))->type == O_ERROR)
+            if ((r = bi_use(env, args))->type == O_ERROR) {
                 obj_dump(r);
+                putchar('\n');
+            }
             obj_free(r);
         }
     }

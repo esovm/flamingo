@@ -1,5 +1,5 @@
-#ifndef ENV_H
-#define ENV_H
+#ifndef FLAMINGO_ENV_H
+#define FLAMINGO_ENV_H
 
 #include "object.h"
 
@@ -19,4 +19,4 @@ void env_register(Env *, const char *, BuiltinFn);
 void env_register_all(Env *);
 void env_free(Env *);
 
-#endif /* ENV_H */
+#endif /* FLAMINGO_ENV_H */

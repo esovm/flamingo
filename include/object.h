@@ -1,5 +1,5 @@
-#ifndef OBJECT_H
-#define OBJECT_H
+#ifndef FLAMINGO_OBJECT_H
+#define FLAMINGO_OBJECT_H
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -82,7 +82,7 @@ Object *obj_new_lambda(Object *, Object *);
 Object *obj_new_sexpr(void);
 Object *obj_new_bexpr(void);
 
-Object *obj_read_expr(char *string, size_t pos, char end);
+Object *obj_read_expr(char *, size_t *, char);
 Object *obj_read(char *, size_t *);
 Object *obj_eval(Env *, Object *);
 void obj_dump(Object *);
@@ -185,4 +185,4 @@ static inline Object *bi_loc(Env *env, Object *list) { /* local */
     return process_var(env, list, "=");
 }
 
-#endif /* OBJECT_H */
+#endif /* FLAMINGO_OBJECT_H */

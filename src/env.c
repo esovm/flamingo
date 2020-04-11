@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "util.h"
 #include "env.h"
 

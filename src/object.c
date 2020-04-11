@@ -237,25 +237,25 @@ static Object *obj_read_num(char *s)
 
 static Object *obj_read_sym(char *string, size_t *pos)
 {
-    char *tmp = calloc(1, 1), c;
+    char *tmp = calloc(1, 1);
 
     while (SYM_NUM(string, *pos) && string[*pos]) {
         tmp = s_realloc(tmp, strlen(tmp) + 2); /* + 2, 1 for character, 1 for null term */
-        tmp[strlen(tmp)] = string[*pos++];
+        tmp[strlen(tmp)] = string[*pos];
         tmp[strlen(tmp) + 1] = '\0';
-        // ++pos;
+        (*pos)++;
     }
 
     bool number = *tmp == '-' || isdigit(*tmp);
-    while ((c = *tmp++)) {
-        if (!isdigit(c)) {
+    for (size_t i = 1; i < strlen(tmp); ++i) {
+        if (!isdigit(tmp[i])) {
             number = false;
             break;
         }
     }
+    if (strlen(tmp) == 1 && *tmp == '-') number = false;
 
-    Object *ret;
-    obj_append(ret, number ? obj_read_num(tmp) : obj_new_sym(tmp));
+    Object *ret = number ? obj_read_num(tmp) : obj_new_sym(tmp);
     free(tmp);
     return ret;
 }
@@ -264,7 +264,7 @@ static Object *obj_read_str(char *string, size_t *pos)
 {
     char *tmp = calloc(1, 1), c;
 
-    (*pos)++;
+    (*pos)++; /* skip opening quote */
 
     while (string[*pos] != '\'') {
         c = string[*pos];
@@ -273,64 +273,109 @@ static Object *obj_read_str(char *string, size_t *pos)
             return obj_new_err("string literal is missing a closing quote");
         }
         if (c == '\\') {
-            if (strchr(unescape_chars, string[++pos])) {
-                c = obj_unescape(string[pos]);
+            if (strchr(unescape_chars, string[*pos])) {
+                c = obj_unescape(string[*pos]);
             } else {
-                obj_append(obj, obj_new_err("unknown escape sequence '\\%c'", c));
                 free(tmp);
-                return strlen(string);
+                return obj_new_err("unknown escape sequence '\\%c'", c);
             }
         }
 
         tmp = s_realloc(tmp, strlen(tmp) + 2);
         tmp[strlen(tmp)] = c;
         tmp[strlen(tmp) + 1] = '\0';
-        ++pos;
+        (*pos)++;
     }
 
-    obj_append(obj, obj_new_str(tmp));
+    (*pos)++; /* skip closing quote */
+    Object *ret = obj_new_str(tmp);
     free(tmp);
-    return pos + 1;
+    return ret;
 }
 
-Object *obj_read_expr(char *string, size_t pos, char end)
+Object *obj_read_expr(char *string, size_t *pos, char end)
 {
-    while (string[pos] != end) {
-        if (!string[pos]) {
-            obj_append(out, obj_new_err("missing %c at end of input", end));
-            return strlen(string) + 1;
-        }
-        if (isspace((unsigned char)string[pos])) { /* whitespace */
-            /* skip it and continue */
-            ++pos;
-            continue;
-        }
-        if (string[pos] == '#') { /* single line comment */
-            while (string[pos] != '\n' && string[pos]) ++pos;
-            ++pos;
-            continue;
-        }
-        if (string[pos] == '(' || string[pos] == '[') { /* s-expression or b-expression */
-            Object *e = string[pos] == '(' ? obj_new_sexpr() : obj_new_bexpr();
-            obj_append(out, e);
-            pos = obj_read_expr(e, string, pos + 1, string[pos] == '(' ? ')' : ']');
-            continue;
-        }
-        if (SYM_NUM(string, pos)) {
-            /* number or symbol */
-            pos = obj_read_sym(out, string, pos);
-            continue;
-        }
-        if (string[pos] == '\'') { /* string */
-            pos = obj_read_str(out, string, pos + 1);
-            continue;
-        }
+    Object *a = end == ')' ? obj_new_sexpr() : obj_new_bexpr(), *b;
 
-        obj_append(out, obj_new_err("I don't know how to handle '%c'", string[pos]));
-        return strlen(string) + 1;
+    while (string[*pos] != end) {
+        if ((b = obj_read(string, pos))->type == O_ERROR) {
+            obj_free(a);
+            return b;
+        } else {
+            obj_append(a, b);
+        }
     }
-    return pos + 1;
+    (*pos)++;
+    return a;
 }
+
+Object *obj_read(char *str, size_t *pos)
+{
+    while ((isspace((unsigned char)str[*pos]) || str[*pos] == '#') && str[*pos]) {
+        if (str[*pos] == '#') while (str[*pos] != '\n' && str[*pos]) (*pos)++;
+        (*pos)++;
+    }
+
+    Object *ret;
+    if (!str[*pos]) return obj_new_err("Unexpected EOF");
+
+    if (str[*pos] == '(' || str[*pos] == '[') {
+        (*pos)++;
+        ret = obj_read_expr(str, pos, str[*pos] == '(' ? ')' : ']');
+    } else if (SYM_NUM(str, *pos)) {
+        ret = obj_read_sym(str, pos);
+    } else if (str[*pos] == '\'') {
+        ret = obj_read_str(str, pos);
+    } else {
+        ret = obj_new_err("I don't know how to handle '%c'", str[*pos]);
+    }
+
+    while (isspace((unsigned char)str[*pos]) && str[*pos] == '#' && str[*pos]) {
+        if (str[*pos] == '#') while (str[*pos] != '\n' && str[*pos]) (*pos)++;
+        (*pos)++;
+    }
+
+    return ret;
+}
+
+// Object *obj_read_expr(char *string, size_t *pos, char end)
+// {
+//     while (string[pos] != end) {
+//         if (!string[pos]) {
+//             obj_append(out, obj_new_err("missing %c at end of input", end));
+//             return strlen(string) + 1;
+//         }
+//         if (isspace((unsigned char)string[pos])) { /* whitespace */
+//             /* skip it and continue */
+//             ++pos;
+//             continue;
+//         }
+//         if (string[pos] == '#') { /* single line comment */
+//             while (string[pos] != '\n' && string[pos]) ++pos;
+//             ++pos;
+//             continue;
+//         }
+//         if (string[pos] == '(' || string[pos] == '[') { /* s-expression or b-expression */
+//             Object *e = string[pos] == '(' ? obj_new_sexpr() : obj_new_bexpr();
+//             obj_append(out, e);
+//             pos = obj_read_expr(e, string, pos + 1, string[pos] == '(' ? ')' : ']');
+//             continue;
+//         }
+//         if (SYM_NUM(string, pos)) {
+//             /* number or symbol */
+//             pos = obj_read_sym(out, string, pos);
+//             continue;
+//         }
+//         if (string[pos] == '\'') { /* string */
+//             pos = obj_read_str(out, string, pos + 1);
+//             continue;
+//         }
+
+//         obj_append(out, obj_new_err("I don't know how to handle '%c'", string[pos]));
+//         return strlen(string) + 1;
+//     }
+//     return pos + 1;
+// }
 
 Object *obj_call(Env *env, Object *func, Object *list)
 {
@@ -414,6 +459,7 @@ bool obj_equal(Object *a, Object *b)
             if (!obj_equal(a->cell[i], b->cell[i])) return false;
         return true;
     }
+    return false;
 }
 
 bool obj_is_truthy(Object *obj)
@@ -438,7 +484,7 @@ Object *obj_to_bool(Object *obj)
     }
 }
 
-Object *obj_eval_sexpr(Env *env, Object *obj);
+static Object *obj_eval_sexpr(Env *, Object *);
 
 Object *obj_eval(Env *env, Object *obj)
 {
@@ -464,7 +510,7 @@ Object *obj_eval_sexpr(Env *env, Object *obj)
     if (error_id != -1) return obj_take(obj, error_id);
 
     if (!obj->nelem) return obj;
-    if (obj->nelem == 1) return obj_take(obj, 0);
+    if (obj->nelem == 1) return obj_eval(env, obj_take(obj, 0));
 
     if ((first = obj_pop(obj, 0))->type != O_FUNC) {
         obj_free(first);
@@ -494,7 +540,7 @@ void obj_dump_str(Object *obj)
     char c;
     putchar('\'');
     while ((c = *obj->r.string++))
-        printf(strchr(escape_chars, c) ? "%s" : "%c", strchr(escape_chars, c) ? obj_escape(c) : c);
+        strchr(escape_chars, c) ? fputs(obj_escape(c), stdout) : putchar(c);
     putchar('\'');
 }
 
