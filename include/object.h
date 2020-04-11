@@ -31,6 +31,10 @@
     OBJ_ENSURE_F(OBJ, OBJ->nelem == N, "%s expected %d argument%s but got %d", \
                  ID, N, N != 1 ? "s" : "", OBJ->nelem);
 
+#define NOT_EMPTY(ID, OBJ, I)                                                                 \
+    OBJ_ENSURE_F(OBJ, obj->cell[I]->nelem,                                                    \
+                 "%s cannot operate on empty b-expression ('[]'). (argument %lu)", ID, I + 1);
+
 extern mpc_parser_T *crane;
 
 /* these strings have to exactly match the `obj_type` enum elements */
@@ -41,6 +45,7 @@ typedef struct Env Env;
 typedef Object *(*BuiltinFn)(Env *, Object *);
 
 typedef enum {
+    O_BOOLEAN,
     O_NUMBER,
     O_ERROR,
     O_SYMBOL,
@@ -53,6 +58,7 @@ typedef enum {
 struct Object {
     obj_type type;
     union {
+        bool boolean;
         double number;
         char *error;
         char *symbol;
@@ -69,6 +75,7 @@ struct Object {
     struct Object **cell;
 };
 
+Object *obj_new_bool(bool);
 Object *obj_new_num(double);
 Object *obj_new_err(const char *fmt, ...);
 Object *obj_new_sym(const char *);
@@ -89,6 +96,8 @@ Object *obj_cp(Object *);
 Object *obj_take(Object *, size_t);
 Object *obj_pop(Object *, size_t);
 bool obj_equal(Object *, Object *);
+bool obj_is_truthy(Object *);
+Object *obj_to_bool(Object *);
 
 Object *process_op(Env *, Object *, const char *);
 Object *process_rel(Env *, Object *, const char *);
@@ -106,7 +115,7 @@ Object *bi_init(Env *, Object *);
 Object *bi_lambda(Env *, Object *);
 Object *bi_if(Env *, Object *);
 Object *bi_use(Env *, Object *);
-Object *bi_show(Env *, Object *);
+Object *bi_puts(Env *, Object *);
 
 static inline Object *bi_add(Env *env, Object *obj) {
     return process_op(env, obj, "+");

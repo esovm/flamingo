@@ -85,18 +85,15 @@ Object *process_rel(Env *env, Object *list, const char *op)
 Object *process_log(Env *env, Object *list, const char *op)
 {
     (void)env;
-    for (size_t i = 0; i < list->nelem; ++i)
-        EXPECT(op, list, i, O_NUMBER);
+    Object *a = obj_to_bool(obj_pop(list, 0));
 
-    Object *a = obj_pop(list, 0);
-
-    if (EQ(op, "not") && !list->nelem) a->r.number = !a->r.number;
+    if (EQ(op, "not") && !list->nelem) a->r.boolean = !a->r.boolean;
 
     while (list->nelem) {
-        Object *b = obj_pop(list, 0);
+        Object *b = obj_to_bool(obj_pop(list, 0));
 
-        if (EQ(op, "or")) a->r.number = a->r.number || b->r.number;
-        if (EQ(op, "and")) a->r.number = a->r.number && b->r.number;
+        if (EQ(op, "or")) a->r.boolean = a->r.boolean || b->r.boolean;
+        else if (EQ(op, "and")) a->r.boolean = a->r.boolean && b->r.boolean;
 
         obj_free(b);
     }

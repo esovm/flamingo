@@ -10,8 +10,18 @@
 
 /* these strings have to exactly match the `obj_type` enum elements */
 const char *const obj_type_arr[] = {
-   "number", "error", "symbol", "string", "function", "s-expression", "b-expression"
+   "boolean", "number", "error", "symbol", "string", "function", "s-expression", "b-expression"
 };
+
+Object *obj_new_bool(bool b)
+{
+    Object *ret = s_malloc(sizeof(Object));
+
+    ret->type = O_BOOLEAN;
+    ret->r.boolean = b;
+
+    return ret;
+}
 
 Object *obj_new_num(double n)
 {
@@ -124,8 +134,8 @@ Object *obj_attach(Object *obj, Object *obj2)
 Object *obj_pop(Object *obj, size_t idx)
 {
     Object *elem = obj->cell[idx];
-    memmove(&obj->cell[idx], &obj->cell[idx + 1], sizeof(Object *) * (obj->nelem-- - idx - 1));
-    obj->cell = s_realloc(obj->cell, sizeof(Object *) * obj->nelem);
+    memmove(&obj->cell[idx], &obj->cell[idx + 1], sizeof(Object *) * (obj->nelem - idx - 1));
+    obj->cell = s_realloc(obj->cell, sizeof(Object *) * --obj->nelem);
     return elem;
 }
 
@@ -143,12 +153,13 @@ Object *obj_cp(Object *obj)
     ret->type = obj->type;
 
     switch (ret->type) {
+    case O_BOOLEAN: ret->r.boolean = obj->r.boolean; break;
     case O_NUMBER: ret->r.number = obj->r.number; break;
     case O_ERROR: ret->r.error = dupstr(obj->r.error); break;
     case O_SYMBOL: ret->r.symbol = dupstr(obj->r.symbol); break;
     case O_STRING: ret->r.string = dupstr(obj->r.string); break;
     case O_FUNC:
-        if (obj->r.f.builtin == NULL) {
+        if (!obj->r.f.builtin) {
             ret->r.f.builtin = NULL;
             ret->r.f.env = env_cp(obj->r.f.env);
             ret->r.f.params = obj_cp(obj->r.f.params);
@@ -167,6 +178,11 @@ Object *obj_cp(Object *obj)
     }
 
     return ret;
+}
+
+Object *obj_read_bool(mpc_ast_T *ast)
+{
+	return obj_new_bool(EQ(ast->contents, "true") ? true : false);
 }
 
 Object *obj_read_num(mpc_ast_T *ast)
@@ -191,6 +207,7 @@ Object *obj_read(mpc_ast_T *ast)
 {
 	Object *obj = NULL;
 
+	if (strstr(ast->tag, "boolean")) return obj_read_bool(ast);
 	if (strstr(ast->tag, "number")) return obj_read_num(ast);
 	if (strstr(ast->tag, "symbol")) return obj_new_sym(ast->contents);
 	if (strstr(ast->tag, "string")) return obj_read_str(ast);
@@ -278,6 +295,7 @@ bool obj_equal(Object *a, Object *b)
     if (a->type != b->type) return false;
 
     switch (a->type) {
+    case O_BOOLEAN: return a->r.boolean == b->r.boolean;
     case O_NUMBER: return a->r.number == b->r.number;
     case O_SYMBOL: return EQ(a->r.symbol, b->r.symbol);
     case O_STRING: return EQ(a->r.string, b->r.string);
@@ -292,6 +310,28 @@ bool obj_equal(Object *a, Object *b)
         for (size_t i = 0; i < a->nelem; ++i)
             if (!obj_equal(a->cell[i], b->cell[i])) return false;
         return true;
+    }
+}
+
+bool obj_is_truthy(Object *obj)
+{
+    switch (obj->type) {
+    case O_BOOLEAN: return obj->r.boolean != false;
+    case O_NUMBER: return obj->r.number != 0;
+    case O_STRING: return obj->r.string[0] != '\0';
+    case O_SEXPR: case O_BEXPR: return obj->nelem != 0;
+    default: return true;
+    }
+}
+
+Object *obj_to_bool(Object *obj)
+{
+    switch (obj->type) {
+    case O_BOOLEAN: return obj_new_bool(obj->r.boolean);
+    case O_NUMBER: return obj_new_bool(obj->r.number != 0);
+    case O_STRING: return obj_new_bool(*obj->r.string != '\0');
+    case O_SEXPR: case O_BEXPR: return obj_new_bool(obj->nelem != 0);
+    default: return obj_new_bool(true);
     }
 }
 
@@ -356,6 +396,7 @@ void obj_dump_str(Object *obj)
 void obj_dump(Object *obj)
 {
     switch (obj->type) {
+    case O_BOOLEAN: printf("%s", obj->r.boolean ? "true" : "false"); break;
     case O_NUMBER: printf("%g", obj->r.number); break;
     case O_ERROR: printf("Error: %s", obj->r.error); break;
     case O_SYMBOL: fputs(obj->r.symbol, stdout); break;

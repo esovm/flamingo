@@ -4,8 +4,6 @@
 
 ### constants
 
-(def [false] 0)
-(def [true] (not false))
 (def [null] [])
 
 ### functions

@@ -25,7 +25,7 @@ Object *bi_first(Env *env, Object *obj)
     (void)env;
     NARG("first", obj, 1);
     EXPECT("first", obj, 0, O_BEXPR);
-    OBJ_ENSURE(obj, obj->cell[0]->nelem, "first cannot operate on empty b-expression ('[]')");
+    NOT_EMPTY("first", obj, 0);
 
     Object *first = obj_take(obj, 0);
     while (first->nelem > 1)
@@ -39,7 +39,7 @@ Object *bi_last(Env *env, Object *obj)
     (void)env;
     NARG("last", obj, 1);
     EXPECT("last", obj, 0, O_BEXPR);
-    OBJ_ENSURE(obj, obj->cell[0]->nelem, "last cannot operate on empty b-expression ('[]')");
+    NOT_EMPTY("last", obj, 0);
 
     Object *last = obj_take(obj, obj->nelem - 1);
     while (last->nelem > 1)
@@ -53,7 +53,7 @@ Object *bi_rest(Env *env, Object *obj)
     (void)env;
     NARG("rest", obj, 1);
     EXPECT("rest", obj, 0, O_BEXPR);
-    OBJ_ENSURE(obj, obj->cell[0]->nelem, "rest cannot operate on empty b-expression ('[]')");
+    NOT_EMPTY("rest", obj, 0);
 
     Object *first = obj_take(obj, 0);
     obj_free(obj_pop(first, 0));
@@ -97,7 +97,7 @@ Object *bi_init(Env *env, Object *obj)
     (void)env;
     NARG("init", obj, 1);
     EXPECT("init", obj, 0, O_BEXPR);
-    OBJ_ENSURE(obj, obj->cell[0]->nelem, "init cannot operate on empty b-expression ('[]')");
+    NOT_EMPTY("init", obj, 0);
 
     Object *first = obj_take(obj, 0);
     obj_free(obj_pop(first, first->nelem - 1));
@@ -150,13 +150,12 @@ Object *bi_lambda(Env *env, Object *list)
 Object *bi_if(Env *env, Object *list)
 {
     NARG("if", list, 3);
-    EXPECT("if", list, 0, O_NUMBER);
     EXPECT("if", list, 1, O_BEXPR);
     EXPECT("if", list, 2, O_BEXPR);
 
     list->cell[1]->type = list->cell[2]->type = O_SEXPR;
 
-    Object *ret = list->cell[0]->r.number
+    Object *ret = obj_is_truthy(list->cell[0])
         ? obj_eval(env, obj_pop(list, 1))
         : obj_eval(env, obj_pop(list, 2));
 
@@ -169,13 +168,19 @@ Object *bi_use(Env *env, Object *list)
     NARG("use", list, 1);
     EXPECT("use", list, 0, O_STRING);
 
-    /* + 5 for '.crn' extension and null terminator */
-    char *fn = s_malloc(strlen(list->cell[0]->r.string) + 5);
-    strcpy(fn, list->cell[0]->r.string);
-    strcat(fn, ".crn");
+    char *name = list->cell[0]->r.string;
+    bool to_free = false;
+
+    if (!EQ(&list->cell[0]->r.string[strlen(list->cell[0]->r.string) - 4], ".crn")) {
+        /* + 5 for '.crn' extension and null terminator */
+        name = s_malloc(strlen(list->cell[0]->r.string) + 5);
+        strcpy(name, list->cell[0]->r.string);
+        strcat(name, ".crn");
+        to_free = true;
+    }
 
     mpc_result_T res;
-    if (mpc_parse_contents(fn, crane, &res)) {
+    if (mpc_parse_contents(name, crane, &res)) {
         Object *expression = obj_read(res.output);
         mpc_ast_delete(res.output);
 
@@ -188,7 +193,7 @@ Object *bi_use(Env *env, Object *list)
             obj_free(a);
         }
 
-        free(fn);
+        if (to_free) free(name);
         obj_free(expression);
         obj_free(list);
 
@@ -203,7 +208,7 @@ Object *bi_use(Env *env, Object *list)
     return error;
 }
 
-Object *bi_show(Env *env, Object *list)
+Object *bi_puts(Env *env, Object *list)
 {
     (void)env;
     for (size_t i = 0; i < list->nelem; ++i) {

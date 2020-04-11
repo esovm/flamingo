@@ -9,7 +9,7 @@
 
 #define CRANE_VERSION "0.1.0"
 
-mpc_parser_T *com, *num, *sym, *str, *sexpr, *bexpr, *expr, *crane;
+mpc_parser_T *com, *boolean, *num, *sym, *str, *sexpr, *bexpr, *expr, *crane;
 
 static void repl(Env *env, mpc_parser_T *par)
 {
@@ -45,6 +45,7 @@ int main(int argc, char **argv)
 {
     Env *env = env_new();
     com = mpc_new("comment");
+    boolean = mpc_new("boolean");
     num = mpc_new("number");
     sym = mpc_new("symbol");
     str = mpc_new("string");
@@ -55,13 +56,15 @@ int main(int argc, char **argv)
 
     mpca_lang(MPCA_LANG_DEFAULT,
         "comment      : /#[^\\r\\n]*/;"
+        "boolean      : \"true\" | \"false\";"
         "number       : /-?\\.?\\d+\\.?\\d*/;"
         "symbol       : /[a-zA-Z0-9_+\\-*\\/%^\\\\=<>!&@\\|~$]+/;"
         "string       : /'(\\\\.|[^'])*'/;"
         "sexpression  : '(' <expression>* ')';"
         "bexpression  : '[' <expression>* ']';"
-        "expression   : <comment> | <number> | <symbol> | <string> | <sexpression> | <bexpression>;"
-        "crane        : /^/ <expression>* /$/;", com, num, sym, str, sexpr, bexpr, expr, crane);
+        "expression   : <comment> | <boolean> | <number> | <symbol>"
+        "| <string> | <sexpression> | <bexpression>;"
+        "crane        : /^/ <expression>* /$/;", com, boolean, num, sym, str, sexpr, bexpr, expr, crane);
 
     if (argc == 1) {
         repl(env, crane);
@@ -75,7 +78,7 @@ int main(int argc, char **argv)
     }
 
     env_free(env);
-    mpc_cleanup(8, com, num, sym, str, sexpr, bexpr, expr, crane);
+    mpc_cleanup(9, com, boolean, num, sym, str, sexpr, bexpr, expr, crane);
 
     return 0;
 }
