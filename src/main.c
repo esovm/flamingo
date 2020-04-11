@@ -7,16 +7,16 @@
 #include "object.h"
 #include "env.h"
 
-#define CRANE_VERSION "0.1.0"
+#define FLAMINGO_VERSION "0.1.0"
 
-mpc_parser_T *com, *boolean, *num, *sym, *str, *sexpr, *bexpr, *expr, *crane;
+mpc_parser_T *com, *boolean, *num, *sym, *str, *sexpr, *bexpr, *expr, *flamingo;
 
 static void repl(Env *env, mpc_parser_T *par)
 {
     mpc_result_T res;
     char *line;
 
-    printf("Crane %s\ntype \"exit\" to terminate\n", CRANE_VERSION);
+    printf("Flamingo %s\ntype \"exit\" to terminate\n", FLAMINGO_VERSION);
 
     while ((line = readline("=> "))) {
         if (!*line) {
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     sexpr = mpc_new("sexpression");
     bexpr = mpc_new("bexpression");
     expr = mpc_new("expression");
-    crane = mpc_new("crane");
+    flamingo = mpc_new("flamingo");
 
     mpca_lang(MPCA_LANG_DEFAULT,
         "comment      : /#[^\\r\\n]*/;"
@@ -64,10 +64,10 @@ int main(int argc, char **argv)
         "bexpression  : '[' <expression>* ']';"
         "expression   : <comment> | <boolean> | <number> | <symbol>"
         "| <string> | <sexpression> | <bexpression>;"
-        "crane        : /^/ <expression>* /$/;", com, boolean, num, sym, str, sexpr, bexpr, expr, crane);
+        "flamingo        : /^/ <expression>* /$/;", com, boolean, num, sym, str, sexpr, bexpr, expr, flamingo);
 
     if (argc == 1) {
-        repl(env, crane);
+        repl(env, flamingo);
     } else {
         for (int i = 1; i < argc; ++i) {
             Object *r, *args = obj_append(obj_new_sexpr(), obj_new_str(argv[i]));
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
     }
 
     env_free(env);
-    mpc_cleanup(9, com, boolean, num, sym, str, sexpr, bexpr, expr, crane);
+    mpc_cleanup(9, com, boolean, num, sym, str, sexpr, bexpr, expr, flamingo);
 
     return 0;
 }

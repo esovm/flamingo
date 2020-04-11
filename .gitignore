@@ -1,5 +1,5 @@
 .vscode/
 build/
 *.out
-crane
+flamingo
 .DS_Store

@@ -3,15 +3,15 @@ RM = -rm -rf
 
 default: debug
 release:
-	$(MAKE) -f scripts/build.mk NAME=crane MODE=release SRCDIR=src
-	cp build/crane crane
+	$(MAKE) -f scripts/build.mk NAME=flamingo MODE=release SRCDIR=src
+	cp build/flamingo flamingo
 debug:
-	$(MAKE) -f scripts/build.mk NAME=crane MODE=debug SRCDIR=src
+	$(MAKE) -f scripts/build.mk NAME=flamingo MODE=debug SRCDIR=src
 run:
 	@$(MAKE) release
-	@./crane
+	@./flamingo
 clean:
 	$(RM) $(BUILDDIR)
-	$(RM) crane
+	$(RM) flamingo
 
 .PHONY: clean release default run

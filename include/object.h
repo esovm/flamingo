@@ -35,7 +35,7 @@
     OBJ_ENSURE_F(OBJ, obj->cell[I]->nelem,                                                    \
                  "%s cannot operate on empty b-expression ('[]'). (argument %lu)", ID, I + 1);
 
-extern mpc_parser_T *crane;
+extern mpc_parser_T *flamingo;
 
 /* these strings have to exactly match the `obj_type` enum elements */
 extern const char *const obj_type_arr[];

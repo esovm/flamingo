@@ -171,16 +171,16 @@ Object *bi_use(Env *env, Object *list)
     char *name = list->cell[0]->r.string;
     bool to_free = false;
 
-    if (!EQ(&list->cell[0]->r.string[strlen(list->cell[0]->r.string) - 4], ".crn")) {
-        /* + 5 for '.crn' extension and null terminator */
-        name = s_malloc(strlen(list->cell[0]->r.string) + 5);
+    if (!EQ(&list->cell[0]->r.string[strlen(list->cell[0]->r.string) - 3], ".fl")) {
+        /* + 4 for '.fl' extension and null terminator */
+        name = s_malloc(strlen(list->cell[0]->r.string) + 4);
         strcpy(name, list->cell[0]->r.string);
-        strcat(name, ".crn");
+        strcat(name, ".fl");
         to_free = true;
     }
 
     mpc_result_T res;
-    if (mpc_parse_contents(name, crane, &res)) {
+    if (mpc_parse_contents(name, flamingo, &res)) {
         Object *expression = obj_read(res.output);
         mpc_ast_delete(res.output);
 
