@@ -87,10 +87,9 @@ char *trim(char *str)
 	return str;
 }
 
-char *readfile(const char *path)
+char *xreadfile(const char *path)
 {
     FILE *fp = fopen(path, "r");
-
 	if (!fp) fuk("Cannot open file '%s'", path);
 
 	fseek(fp, 0, SEEK_END);
@@ -98,14 +97,28 @@ char *readfile(const char *path)
 	rewind(fp);
 
 	char *buf = malloc(len + 1);
-
 	if (!buf) fuk("Couldn't allocate %lu bytes of memory", len + 1);
 
     buf[len] = '\0';
-
     fread(buf, 1, len, fp);
-
 	fclose(fp);
+    return buf;
+}
 
+char *readfile(const char *path)
+{
+    FILE *fp = fopen(path, "r");
+	if (!fp) return NULL;
+
+	fseek(fp, 0, SEEK_END);
+    long len = ftell(fp);
+	rewind(fp);
+
+	char *buf = malloc(len + 1);
+	if (!buf) return NULL;
+
+    buf[len] = '\0';
+    fread(buf, 1, len, fp);
+	fclose(fp);
     return buf;
 }

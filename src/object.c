@@ -2,11 +2,52 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
+#include <errno.h>
 
-#include "mpc.h"
 #include "util.h"
 #include "object.h"
 #include "env.h"
+
+#define VALID_CHARS "_+-*/=<>%^\\!&@|~$"
+#define SYM_NUM(s, i) (isalnum(s[i]) || strchr(VALID_CHARS, s[i]))
+
+static const char escape_chars[] = "\a\b\t\n\v\f\r\"\'\\";
+static const char unescape_chars[] = "abtnvfr\"\'\\";
+
+static char *obj_escape(char c)
+{
+    switch (c) {
+    case '\a': return "\\a";
+    case '\b': return "\\b";
+    case '\t': return "\\t";
+    case '\n': return "\\n";
+    case '\v': return "\\v";
+    case '\f': return "\\f";
+    case '\r': return "\\r";
+    case '\"': return "\\\"";
+    case '\'': return "\\\'";
+    case '\\': return "\\\\";
+    }
+    return "";
+}
+
+static char obj_unescape(char c)
+{
+    switch (c) {
+    case 'a': return '\a';
+    case 'b': return '\b';
+    case 't': return '\t';
+    case 'n': return '\n';
+    case 'v': return '\v';
+    case 'f': return '\f';
+    case 'r': return '\r';
+    case '\"': return '\"';
+    case '\'': return '\'';
+    case '\\': return '\\';
+    }
+    return '\0';
+}
 
 /* these strings have to exactly match the `obj_type` enum elements */
 const char *const obj_type_arr[] = {
@@ -180,53 +221,115 @@ Object *obj_cp(Object *obj)
     return ret;
 }
 
-Object *obj_read_bool(mpc_ast_T *ast)
+static Object *obj_read_bool(char *s)
 {
-	return obj_new_bool(EQ(ast->contents, "true") ? true : false);
+	return obj_new_bool(EQ(s, "true") ? true : false);
 }
 
-Object *obj_read_num(mpc_ast_T *ast)
+static Object *obj_read_num(char *s)
 {
-	double n;
-	str2dbl(&n, ast->contents);
-	return errno == ERANGE
-		? obj_new_err("Invalid number. Possibly out of range for a C double")
-		: obj_new_num(n);
+    double n;
+    str2dbl(&n, s);
+    return errno == ERANGE
+        ? obj_new_err("Invalid number. Possibly out of range for a C double")
+        : obj_new_num(n);
 }
 
-Object *obj_read_str(mpc_ast_T *ast)
+static Object *obj_read_sym(char *string, size_t *pos)
 {
-    ast->contents[strlen(ast->contents) - 1] = '\0'; /* remove closing quote */
-    char *s = mpcf_unescape(dupstr(ast->contents + 1)); /* + 1 to skip opening quote */
-    Object *ret = obj_new_str(s);
-    free(s);
+    char *tmp = calloc(1, 1), c;
+
+    while (SYM_NUM(string, *pos) && string[*pos]) {
+        tmp = s_realloc(tmp, strlen(tmp) + 2); /* + 2, 1 for character, 1 for null term */
+        tmp[strlen(tmp)] = string[*pos++];
+        tmp[strlen(tmp) + 1] = '\0';
+        // ++pos;
+    }
+
+    bool number = *tmp == '-' || isdigit(*tmp);
+    while ((c = *tmp++)) {
+        if (!isdigit(c)) {
+            number = false;
+            break;
+        }
+    }
+
+    Object *ret;
+    obj_append(ret, number ? obj_read_num(tmp) : obj_new_sym(tmp));
+    free(tmp);
     return ret;
 }
 
-Object *obj_read(mpc_ast_T *ast)
+static Object *obj_read_str(char *string, size_t *pos)
 {
-	Object *obj = NULL;
+    char *tmp = calloc(1, 1), c;
 
-	if (strstr(ast->tag, "boolean")) return obj_read_bool(ast);
-	if (strstr(ast->tag, "number")) return obj_read_num(ast);
-	if (strstr(ast->tag, "symbol")) return obj_new_sym(ast->contents);
-	if (strstr(ast->tag, "string")) return obj_read_str(ast);
+    (*pos)++;
 
-	if (*ast->tag == '>' || strstr(ast->tag, "sexpression")) obj = obj_new_sexpr();
-	if (strstr(ast->tag, "bexpression")) obj = obj_new_bexpr();
+    while (string[*pos] != '\'') {
+        c = string[*pos];
+        if (!c) {
+            free(tmp);
+            return obj_new_err("string literal is missing a closing quote");
+        }
+        if (c == '\\') {
+            if (strchr(unescape_chars, string[++pos])) {
+                c = obj_unescape(string[pos]);
+            } else {
+                obj_append(obj, obj_new_err("unknown escape sequence '\\%c'", c));
+                free(tmp);
+                return strlen(string);
+            }
+        }
 
-	for (int i = 0; i < ast->children_num; ++i) {
-		if (*ast->children[i]->contents == '('       ||
-			*ast->children[i]->contents == ')'       ||
-		    *ast->children[i]->contents == '['       ||
-			*ast->children[i]->contents == ']'       ||
-			strstr(ast->children[i]->tag, "comment") ||
-			EQ(ast->children[i]->tag, "regex"))
-			continue;
-		obj = obj_append(obj, obj_read(ast->children[i]));
-	}
+        tmp = s_realloc(tmp, strlen(tmp) + 2);
+        tmp[strlen(tmp)] = c;
+        tmp[strlen(tmp) + 1] = '\0';
+        ++pos;
+    }
 
-	return obj;
+    obj_append(obj, obj_new_str(tmp));
+    free(tmp);
+    return pos + 1;
+}
+
+Object *obj_read_expr(char *string, size_t pos, char end)
+{
+    while (string[pos] != end) {
+        if (!string[pos]) {
+            obj_append(out, obj_new_err("missing %c at end of input", end));
+            return strlen(string) + 1;
+        }
+        if (isspace((unsigned char)string[pos])) { /* whitespace */
+            /* skip it and continue */
+            ++pos;
+            continue;
+        }
+        if (string[pos] == '#') { /* single line comment */
+            while (string[pos] != '\n' && string[pos]) ++pos;
+            ++pos;
+            continue;
+        }
+        if (string[pos] == '(' || string[pos] == '[') { /* s-expression or b-expression */
+            Object *e = string[pos] == '(' ? obj_new_sexpr() : obj_new_bexpr();
+            obj_append(out, e);
+            pos = obj_read_expr(e, string, pos + 1, string[pos] == '(' ? ')' : ']');
+            continue;
+        }
+        if (SYM_NUM(string, pos)) {
+            /* number or symbol */
+            pos = obj_read_sym(out, string, pos);
+            continue;
+        }
+        if (string[pos] == '\'') { /* string */
+            pos = obj_read_str(out, string, pos + 1);
+            continue;
+        }
+
+        obj_append(out, obj_new_err("I don't know how to handle '%c'", string[pos]));
+        return strlen(string) + 1;
+    }
+    return pos + 1;
 }
 
 Object *obj_call(Env *env, Object *func, Object *list)
@@ -388,9 +491,11 @@ void obj_dump_expr(Object *obj, char open, char close)
 
 void obj_dump_str(Object *obj)
 {
-    char *s = mpcf_escape(dupstr(obj->r.string));
-    printf("'%s'", s);
-    free(s);
+    char c;
+    putchar('\'');
+    while ((c = *obj->r.string++))
+        printf(strchr(escape_chars, c) ? "%s" : "%c", strchr(escape_chars, c) ? obj_escape(c) : c);
+    putchar('\'');
 }
 
 void obj_dump(Object *obj)

@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "object.h"
 #include "env.h"
 #include "util.h"
@@ -168,7 +170,7 @@ Object *bi_use(Env *env, Object *list)
     NARG("use", list, 1);
     EXPECT("use", list, 0, O_STRING);
 
-    char *name = list->cell[0]->r.string;
+    char *name = list->cell[0]->r.string, *data;
     bool to_free = false;
 
     if (!EQ(&list->cell[0]->r.string[strlen(list->cell[0]->r.string) - 3], ".fl")) {
@@ -179,33 +181,35 @@ Object *bi_use(Env *env, Object *list)
         to_free = true;
     }
 
-    mpc_result_T res;
-    if (mpc_parse_contents(name, flamingo, &res)) {
-        Object *expression = obj_read(res.output);
-        mpc_ast_delete(res.output);
+    if (!(data = readfile(name))) {
+        Object *error = obj_new_err("Cannot use file \"%s\"", name);
+        obj_free(list);
+        return error;
+    }
 
-        while (expression->nelem) {
+    size_t pos = 0;
+    Object *expr = obj_read_expr(data, &pos, '\0');
+    free(data);
+
+    if (expr->type != O_ERROR) {
+        while (expr->nelem) {
             Object *a;
-            if ((a = obj_eval(env, obj_pop(expression, 0)))->type == O_ERROR) {
+            if ((a = obj_eval(env, obj_pop(expr, 0)))->type == O_ERROR) {
                 obj_dump(a);
                 putchar('\n');
             }
             obj_free(a);
         }
-
-        if (to_free) free(name);
-        obj_free(expression);
-        obj_free(list);
-
-        return obj_new_sexpr();
+    } else {
+        obj_dump(expr);
+        putchar('\n');
     }
 
-    char *msg = mpc_err_string(res.error);
-    mpc_err_delete(res.error);
-    Object *error = obj_new_err("Cannot use file %s", msg);
-    free(msg);
+    if (to_free) free(name);
+    obj_free(expr);
     obj_free(list);
-    return error;
+
+    return obj_new_sexpr();
 }
 
 Object *bi_puts(Env *env, Object *list)

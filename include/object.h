@@ -1,9 +1,8 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+#include <stddef.h>
 #include <stdbool.h>
-
-#include "mpc.h"
 
 #define OBJ_ENSURE(OBJ, CONDITION, ERROR_STR)   \
     do {                                        \
@@ -34,8 +33,6 @@
 #define NOT_EMPTY(ID, OBJ, I)                                                                 \
     OBJ_ENSURE_F(OBJ, obj->cell[I]->nelem,                                                    \
                  "%s cannot operate on empty b-expression ('[]'). (argument %lu)", ID, I + 1);
-
-extern mpc_parser_T *flamingo;
 
 /* these strings have to exactly match the `obj_type` enum elements */
 extern const char *const obj_type_arr[];
@@ -85,7 +82,8 @@ Object *obj_new_lambda(Object *, Object *);
 Object *obj_new_sexpr(void);
 Object *obj_new_bexpr(void);
 
-Object *obj_read(mpc_ast_T *);
+Object *obj_read_expr(char *string, size_t pos, char end);
+Object *obj_read(char *, size_t *);
 Object *obj_eval(Env *, Object *);
 void obj_dump(Object *);
 void obj_free(Object *);

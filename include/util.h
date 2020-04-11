@@ -2,6 +2,7 @@
 #define UTIL_H
 
 #include <stddef.h>
+#include <string.h>
 
 #define U_MIN(A, B) (((A) < (B)) ? (A) : (B))
 #define U_MAX(A, B) (((A) > (B)) ? (A) : (B))
@@ -20,6 +21,7 @@ void *s_realloc(void *, size_t);
 char *dupstr(const char *);
 str2dbl_errno str2dbl(double *, char *);
 char *trim(char *);
+char *xreadfile(const char *); /* deadly, will quit on failure */
 char *readfile(const char *);
 
 #endif /* UTIL_H */
