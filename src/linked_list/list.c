@@ -64,7 +64,6 @@ ListNode *list_prepend(List *list, ListNode *node)
         list->head = list->tail = node;
         node->prev = node->next = NULL;
     }
-
     ++list->len;
     return node;
 }
@@ -82,7 +81,6 @@ ListNode *list_append(List *list, ListNode *node)
         list->head = list->tail = node;
         node->prev = node->next = NULL;
     }
-
     ++list->len;
     return node;
 }

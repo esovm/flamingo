@@ -27,25 +27,21 @@ char *dupstr(const char *s)
     return p ? memcpy(p, s, len) : NULL;
 }
 
-// char *trim(char *str)
-// {
-// 	/* trim leading space */
-// 	while (isspace((unsigned char)*str))
-// 		++str;
+char *trim(char *str)
+{
+	/* trim leading space */
+	while (isspace((unsigned char)*str)) ++str;
+    /* all spaces? */
+	if (*str == '\0') return str;
 
-// 	if (*str == '\0') /* all spaces? */
-// 		return str;
+	/* trim trailing space */
+	char *last = &str[strlen(str) - 1];
+	while (last > str && isspace((unsigned char)*last)) --last;
 
-// 	/* trim trailing space */
-// 	char *last = str + strlen(str) - 1;
-// 	while (last > str && isspace((unsigned char)*last))
-// 		--last;
-
-// 	/* write new null terminator character */
-// 	last[1] = '\0';
-
-// 	return str;
-// }
+	/* write new null terminator character */
+	last[1] = '\0';
+	return str;
+}
 
 char *readfile(const char *path)
 {
@@ -54,13 +50,15 @@ char *readfile(const char *path)
 
 	fseek(fp, 0, SEEK_END);
     long len = ftell(fp);
+    if (len == -1) return NULL;
 	rewind(fp);
 
 	char *buf = malloc(len + 1);
 	if (!buf) return NULL;
 
     buf[len] = '\0';
-    fread(buf, 1, len, fp);
-	fclose(fp);
+    if (fread(buf, 1, len, fp) != (size_t)len) return NULL;
+
+    fclose(fp);
     return buf;
 }

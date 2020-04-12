@@ -15,13 +15,14 @@ int main(int argc, char **argv)
 
     if (argc == 1) {
         char *line;
-        printf("Flamingo %s\ntype \"exit\" to terminate\n", FLAMINGO_VERSION);
+        printf("Flamingo %s\ntype \"exit <status>\" to terminate\n", FLAMINGO_VERSION);
 
         while ((line = readline("=> "))) {
-            if (!*line) {
+            if (!*line || !*trim(line)) {
                 free(line);
                 continue;
             }
+
             size_t pos = 0;
             Object *e = obj_read_expr(line, &pos, '\0'), *obj = obj_eval(env, e);
             OBJ_DUMP_LN(obj);
@@ -34,9 +35,8 @@ int main(int argc, char **argv)
     } else {
         for (int i = 1; i < argc; ++i) {
             Object *r, *args = obj_append(obj_new_sexpr(), obj_new_str(argv[i]));
-            if ((r = bi_use(env, args))->type == O_ERROR) {
+            if ((r = bi_use(env, args))->type == O_ERROR)
                 OBJ_DUMP_LN(r);
-            }
             obj_free(r);
         }
     }

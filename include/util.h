@@ -10,7 +10,7 @@
 
 // void fuk(const char *, ...);
 char *dupstr(const char *);
-// char *trim(char *);
+char *trim(char *);
 char *readfile(const char *);
 
 #endif /* FLAMINGO_UTIL_H */

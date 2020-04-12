@@ -3,4 +3,3 @@ build/
 *.out
 flamingo
 .DS_Store
-lisp*
