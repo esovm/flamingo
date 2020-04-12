@@ -176,12 +176,11 @@ Object *bi_use(Env *env, Object *list)
 
     if (!EQ(&list->cell[0]->r.string[strlen(list->cell[0]->r.string) - 3], ".fl")) {
         /* + 4 for '.fl' extension and null terminator */
-        name = s_malloc(strlen(list->cell[0]->r.string) + 4);
+        name = malloc(strlen(list->cell[0]->r.string) + 4);
         strcpy(name, list->cell[0]->r.string);
         strcat(name, ".fl");
         to_free = true;
     }
-
     if (!(data = readfile(name))) {
         Object *error = obj_new_err("Cannot use file \"%s\"", name);
         obj_free(list);
@@ -195,15 +194,12 @@ Object *bi_use(Env *env, Object *list)
     if (expr->type != O_ERROR) {
         while (expr->nelem) {
             Object *a;
-            if ((a = obj_eval(env, obj_pop(expr, 0)))->type == O_ERROR) {
-                obj_dump(a);
-                putchar('\n');
-            }
+            if ((a = obj_eval(env, obj_pop(expr, 0)))->type == O_ERROR)
+                OBJ_DUMP_LN(a);
             obj_free(a);
         }
     } else {
-        obj_dump(expr);
-        putchar('\n');
+        OBJ_DUMP_LN(expr);
     }
 
     if (to_free) free(name);
@@ -223,4 +219,15 @@ Object *bi_puts(Env *env, Object *list)
     putchar('\n');
     obj_free(list);
     return obj_new_sexpr();
+}
+
+Object *bi_err(Env *env, Object *list)
+{
+    (void)env;
+    NARG("err", list, 1);
+    EXPECT("err", list, 0, O_STRING);
+
+    Object *ret = obj_new_err(list->cell[0]->r.string);
+    obj_free(list);
+    return ret;
 }

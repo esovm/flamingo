@@ -3,8 +3,7 @@
 ### constants
 
 (def [null] [])
-(def [false] 0)
-(def [true] (not false))
+(def [else] 1) # for when-else
 
 ### functions
 
@@ -31,6 +30,20 @@
     [+ 1 (len (rest l))]
 ])
 
+# reverse list `l`.
+(fn [rev l] [
+  if (== l null)
+    [null]
+    [attach (rev (rest l)) (first l)]
+])
+
+# reverse list `l` in-place.
+(fn [rev-ip l] [
+  if (== l null)
+    [null]
+    [def [l] (attach (rev (rest l)) (first l))]
+])
+
 # return the n-th element of list `l`.
 (fn [n-th n l] [
   if (not n)
@@ -54,3 +67,21 @@
 (fn [let b] [(
   ($ [_] b) ()
 )])
+
+# when-else function
+(fn [when @ pairs] [
+  if (== pairs [])
+    [err 'nothing to `when` on']
+    [if (st (st pairs))
+      [nd (st pairs)]
+      [unpack when (rest pairs)]]
+])
+
+# compare `x` to the first value of each pair and if equal, eval the second
+(fn [match x @ pairs] [
+  if (== pairs null)
+    [err 'no match was found']
+    [if (== x (st (st (pairs))))
+      [nd (st pairs)]
+      [unpack match (attach (list x) (rest pairs))]]
+])

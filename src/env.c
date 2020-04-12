@@ -5,7 +5,7 @@
 
 Env *env_new(void)
 {
-    Env *ret = s_malloc(sizeof(Env));
+    Env *ret = malloc(sizeof(Env));
 
     ret->nelem = 0;
     ret->sym_list = NULL;
@@ -36,8 +36,8 @@ void env_set(Env *env, Object *key, Object *obj)
         }
 
     /* none found, insert new at end */
-    env->sym_list = s_realloc(env->sym_list, ++env->nelem * sizeof(char *));
-    env->obj_list = s_realloc(env->obj_list, env->nelem * sizeof(Object *));
+    env->sym_list = realloc(env->sym_list, ++env->nelem * sizeof(char *));
+    env->obj_list = realloc(env->obj_list, env->nelem * sizeof(Object *));
 
     env->sym_list[env->nelem - 1] = dupstr(key->r.symbol);
     env->obj_list[env->nelem - 1] = obj_cp(obj);
@@ -51,12 +51,12 @@ void env_set_global(Env *env, Object *key, Object *obj)
 
 Env *env_cp(Env *env)
 {
-    Env *ret = s_malloc(sizeof(Env));
+    Env *ret = malloc(sizeof(Env));
 
     ret->nelem = env->nelem;
     ret->parent = env->parent;
-    ret->sym_list = s_malloc(ret->nelem * sizeof(char *));
-    ret->obj_list = s_malloc(ret->nelem * sizeof(Object *));
+    ret->sym_list = malloc(ret->nelem * sizeof(char *));
+    ret->obj_list = malloc(ret->nelem * sizeof(Object *));
 
     for (size_t i = 0; i < ret->nelem; ++i) {
         ret->sym_list[i] = dupstr(env->sym_list[i]);
@@ -118,6 +118,7 @@ void env_register_all(Env *env)
 
     env_register(env, "use", bi_use);
     env_register(env, "puts", bi_puts);
+    env_register(env, "err", bi_err);
 }
 
 void env_free(Env *env)
@@ -126,7 +127,6 @@ void env_free(Env *env)
         free(env->sym_list[i]);
         obj_free(env->obj_list[i]);
     }
-
     free(env->sym_list);
     free(env->obj_list);
     free(env);

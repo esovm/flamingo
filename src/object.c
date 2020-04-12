@@ -9,7 +9,7 @@
 #include "object.h"
 #include "env.h"
 
-#define VALID_CHARS "_+-*/=<>$#%^&@~|\\"
+#define VALID_CHARS "_+-*/=<>$#%^&@~|.\\"
 #define SYM_OR_NUM(s, i) (isalnum(s[i]) || strchr(VALID_CHARS, s[i]))
 /* skip whitespace and comments */
 #define SKIP_WS(s, i)                                                  \
@@ -19,6 +19,11 @@
             ++i;                                                       \
         }                                                              \
     } while (0)
+
+/* these strings have to exactly match the `obj_type` enum elements */
+const char *const obj_type_arr[] = {
+   "boolean", "number", "error", "symbol", "string", "function", "s-expression", "b-expression"
+};
 
 static const char escape_chars[] = "\a\b\t\n\v\f\r\"\'\\";
 static const char unescape_chars[] = "abtnvfr\"\'\\";
@@ -57,43 +62,34 @@ static char obj_unescape(char c)
     return '\0';
 }
 
-/* these strings have to exactly match the `obj_type` enum elements */
-const char *const obj_type_arr[] = {
-   "boolean", "number", "error", "symbol", "string", "function", "s-expression", "b-expression"
-};
-
 Object *obj_new_bool(bool b)
 {
-    Object *ret = s_malloc(sizeof(Object));
-
+    Object *ret = malloc(sizeof(Object));
     ret->type = O_BOOLEAN;
     ret->r.boolean = b;
-
     return ret;
 }
 
 Object *obj_new_num(double n)
 {
-    Object *ret = s_malloc(sizeof(Object));
-
+    Object *ret = malloc(sizeof(Object));
     ret->type = O_NUMBER;
     ret->r.number = n;
-
     return ret;
 }
 
 Object *obj_new_err(const char *fmt, ...)
 {
-    Object *ret = s_malloc(sizeof(Object));
+    Object *ret = malloc(sizeof(Object));
     const size_t amt = 256;
     va_list ap;
 
     va_start(ap, fmt);
 
     ret->type = O_ERROR;
-    ret->r.error = s_malloc(amt);
+    ret->r.error = malloc(amt);
     vsnprintf(ret->r.error, amt - 1, fmt, ap);
-    ret->r.error = s_realloc(ret->r.error, strlen(ret->r.error) + 1);
+    ret->r.error = realloc(ret->r.error, strlen(ret->r.error) + 1);
 
     va_end(ap);
 
@@ -102,72 +98,60 @@ Object *obj_new_err(const char *fmt, ...)
 
 Object *obj_new_sym(const char *s)
 {
-    Object *ret = s_malloc(sizeof(Object));
-
+    Object *ret = malloc(sizeof(Object));
     ret->type = O_SYMBOL;
     ret->r.symbol = dupstr(s);
-
     return ret;
 }
 
 Object *obj_new_str(const char *s)
 {
-    Object *ret = s_malloc(sizeof(Object));
-
+    Object *ret = malloc(sizeof(Object));
     ret->type = O_STRING;
     ret->r.string = dupstr(s);
-
     return ret;
 }
 
 Object *obj_new_func(BuiltinFn func)
 {
-    Object *ret = s_malloc(sizeof(Object));
-
+    Object *ret = malloc(sizeof(Object));
     ret->type = O_FUNC;
     ret->r.f.builtin = func;
-
     return ret;
 }
 
 Object *obj_new_lambda(Object *params, Object *body)
 {
-    Object *ret = s_malloc(sizeof(Object));
-
+    Object *ret = malloc(sizeof(Object));
     ret->type = O_FUNC;
     ret->r.f.builtin = NULL;
     ret->r.f.params = params;
     ret->r.f.body = body;
     ret->r.f.env = env_new();
-
     return ret;
 }
 
 Object *obj_new_sexpr(void)
 {
-    Object *ret = s_malloc(sizeof(Object));
-
+    Object *ret = malloc(sizeof(Object));
     ret->type = O_SEXPR;
     ret->nelem = 0;
     ret->cell = NULL;
-
     return ret;
 }
 
 Object *obj_new_bexpr(void)
 {
-    Object *ret = s_malloc(sizeof(Object));
-
+    Object *ret = malloc(sizeof(Object));
     ret->type = O_BEXPR;
     ret->nelem = 0;
     ret->cell = NULL;
-
     return ret;
 }
 
 Object *obj_append(Object *obj, Object *to_add)
 {
-    obj->cell = s_realloc(obj->cell, sizeof(Object *) * ++obj->nelem);
+    obj->cell = realloc(obj->cell, sizeof(Object *) * ++obj->nelem);
     obj->cell[obj->nelem - 1] = to_add;
     return obj;
 }
@@ -184,7 +168,7 @@ Object *obj_pop(Object *obj, size_t idx)
 {
     Object *elem = obj->cell[idx];
     memmove(&obj->cell[idx], &obj->cell[idx + 1], sizeof(Object *) * (obj->nelem - idx - 1));
-    obj->cell = s_realloc(obj->cell, sizeof(Object *) * --obj->nelem);
+    obj->cell = realloc(obj->cell, sizeof(Object *) * --obj->nelem);
     return elem;
 }
 
@@ -197,7 +181,7 @@ Object *obj_take(Object *obj, size_t idx)
 
 Object *obj_cp(Object *obj)
 {
-    Object *ret = s_malloc(sizeof(Object));
+    Object *ret = malloc(sizeof(Object));
 
     ret->type = obj->type;
 
@@ -220,7 +204,7 @@ Object *obj_cp(Object *obj)
     case O_SEXPR:
     case O_BEXPR:
         ret->nelem = obj->nelem;
-        ret->cell = s_malloc(ret->nelem * sizeof(Object *));
+        ret->cell = malloc(ret->nelem * sizeof(Object *));
         for (size_t i = 0; i < ret->nelem; ++i)
             ret->cell[i] = obj_cp(obj->cell[i]);
         break;
@@ -229,40 +213,43 @@ Object *obj_cp(Object *obj)
     return ret;
 }
 
-static Object *obj_read_bool(char *s)
+static inline Object *obj_read_bool(char *s)
 {
 	return obj_new_bool(EQ(s, "true") ? true : false);
 }
 
 static Object *obj_read_num(char *s)
 {
-    double n;
-    str2dbl(&n, s);
-    return errno == ERANGE
-        ? obj_new_err("invalid number. possibly out of range for a C double")
-        : obj_new_num(n);
+    errno = 0;
+    char *end;
+    double n = strtod(s, &end);
+    if (errno == ERANGE || *end != '\0')
+        return obj_new_err("malformed number. may be out of range for a C double.");
+    return obj_new_num(n);
 }
 
 static Object *obj_read_sym(char *str, size_t *pos)
 {
     char *tmp = calloc(1, 1);
-
     while (SYM_OR_NUM(str, *pos) && str[*pos]) {
-        tmp = s_realloc(tmp, strlen(tmp) + 2); /* + 2, 1 for character, 1 for null term */
-        tmp[strlen(tmp)] = str[*pos];
+        tmp = realloc(tmp, strlen(tmp) + 2); /* + 2, 1 for character, 1 for null term */
+        tmp[strlen(tmp)] = str[(*pos)++];
         tmp[strlen(tmp) + 1] = '\0';
-        ++*pos;
     }
-    bool number = *tmp == '-' || isdigit(*tmp);
+    bool number = *tmp == '-' || *tmp == '.' || isdigit(*tmp);
     for (size_t i = 1; tmp[i]; ++i) {
+        if (tmp[i] == '.') break;
         if (!isdigit(tmp[i])) {
             number = false;
             break;
         }
     }
-    if (!tmp[1] && *tmp == '-') number = false; /* it's just a minus */
+    if (!tmp[1] && (*tmp == '-' || *tmp == '.')) number = false; /* it's just a minus or dot */
 
-    Object *ret = number ? obj_read_num(tmp) : obj_new_sym(tmp);
+    Object *ret;
+    if (number) ret = obj_read_num(tmp);
+    else if (EQ(tmp, "true") || EQ(tmp, "false")) ret = obj_read_bool(tmp);
+    else ret = obj_new_sym(tmp);
     free(tmp);
     return ret;
 }
@@ -288,7 +275,7 @@ static Object *obj_read_str(char *str, size_t *pos)
                 return obj_new_err("unknown escape sequence '\\%c'", str[*pos]);
             }
         }
-        tmp = s_realloc(tmp, strlen(tmp) + 2);
+        tmp = realloc(tmp, strlen(tmp) + 2);
         tmp[strlen(tmp)] = c;
         tmp[strlen(tmp) + 1] = '\0';
         ++*pos;
@@ -358,26 +345,20 @@ Object *obj_call(Env *env, Object *func, Object *list)
             return obj_new_err("too many arguments passed. (expected %d but %d were given)",
                 total, given);
         }
-
         Object *symbol = obj_pop(func->r.f.params, 0);
-
         if (EQ(symbol->r.symbol, "@")) {
             if (func->r.f.params->nelem != 1) {
                 obj_free(list);
                 return obj_new_err("@ is missing a symbol");
             }
-
             Object *args = obj_pop(func->r.f.params, 0);
             env_set(func->r.f.env, args, bi_list(env, list));
             obj_free(symbol);
             obj_free(args);
             break;
         }
-
         Object *value = obj_pop(list, 0);
-
         env_set(func->r.f.env, symbol, value);
-
         obj_free(symbol);
         obj_free(value);
     }
@@ -503,11 +484,9 @@ void obj_dump_expr(Object *obj, char open, char close)
 
 void obj_dump_str(Object *obj)
 {
-    putchar('\'');
     char c;
     for (size_t i = 0; (c = obj->r.string[i]); ++i)
         strchr(escape_chars, c) ? fputs(obj_escape(c), stdout) : putchar(c);
-    putchar('\'');
 }
 
 void obj_dump(Object *obj)

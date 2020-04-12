@@ -34,6 +34,12 @@
     OBJ_ENSURE_F(OBJ, obj->cell[I]->nelem,                                                    \
                  "%s cannot operate on empty b-expression ('[]'). (argument %lu)", ID, I + 1);
 
+#define OBJ_DUMP_LN(OBJ)   \
+    do {                   \
+        obj_dump(OBJ);     \
+        putchar('\n');     \
+    } while (0)
+
 /* these strings have to exactly match the `obj_type` enum elements */
 extern const char *const obj_type_arr[];
 
@@ -113,6 +119,7 @@ Object *bi_lambda(Env *, Object *);
 Object *bi_if(Env *, Object *);
 Object *bi_use(Env *, Object *);
 Object *bi_puts(Env *, Object *);
+Object *bi_err(Env *, Object *);
 
 static inline Object *bi_add(Env *env, Object *obj) {
     return process_op(env, obj, "+");
