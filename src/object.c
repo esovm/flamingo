@@ -9,7 +9,7 @@
 #include "object.h"
 #include "env.h"
 
-#define VALID_CHARS "_+-*/=<>$#%^&@~|.\\"
+#define VALID_CHARS "_+-*/=<>$#%^&@~|!.\\"
 #define SYM_OR_NUM(s, i) (isalnum(s[i]) || strchr(VALID_CHARS, s[i]))
 /* skip whitespace and comments */
 #define SKIP_WS(s, i)                                                  \
@@ -224,7 +224,7 @@ static Object *obj_read_num(char *s)
     char *end;
     double n = strtod(s, &end);
     if (errno == ERANGE || *end != '\0')
-        return obj_new_err("malformed number. may be out of range for a C double.");
+        return obj_new_err("malformed number");
     return obj_new_num(n);
 }
 

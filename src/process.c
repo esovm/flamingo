@@ -61,7 +61,7 @@ Object *process_rel(Env *env, Object *list, const char *op)
         EXPECT(op, list, 1, O_NUMBER);
     }
 
-    int r;
+    bool r;
     switch (*op) {
     case '<':
         r = op[1] == '='
@@ -80,7 +80,7 @@ Object *process_rel(Env *env, Object *list, const char *op)
         r = !obj_equal(list->cell[0], list->cell[1]);
 
     obj_free(list);
-    return obj_new_num(r);
+    return obj_new_bool(r);
 }
 
 /* logical operators */
