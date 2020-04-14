@@ -2,31 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <ctype.h>
-#include <errno.h>
 
 #include "util.h"
-#include "object.h"
 #include "env.h"
+#include "object.h"
 
-#define VALID_CHARS "_+-*/=<>$#%^&@~|!.\\"
-#define SYM_OR_NUM(s, i) (isalnum(s[i]) || strchr(VALID_CHARS, s[i]))
-/* skip whitespace and comments */
-#define SKIP_WS(s, i)                                                  \
-    do {                                                               \
-        while ((isspace(s[i]) || s[i] == '#') && s[i]) {               \
-            if (s[i] == '#') while (s[i] != '\n' && s[i]) ++i;         \
-            ++i;                                                       \
-        }                                                              \
-    } while (0)
-
-/* these strings have to exactly match the `obj_type` enum elements */
+static const char escape_chars[] = "\a\b\t\n\v\f\r\"\'\\";
 const char *const obj_type_arr[] = {
    "boolean", "number", "error", "symbol", "string", "function", "s-expression", "b-expression"
 };
-
-static const char escape_chars[] = "\a\b\t\n\v\f\r\"\'\\";
-static const char unescape_chars[] = "abtnvfr\"\'\\";
 
 static char *obj_escape(char c)
 {
@@ -43,23 +27,6 @@ static char *obj_escape(char c)
     case '\\': return "\\\\";
     }
     return "";
-}
-
-static char obj_unescape(char c)
-{
-    switch (c) {
-    case 'a': return '\a';
-    case 'b': return '\b';
-    case 't': return '\t';
-    case 'n': return '\n';
-    case 'v': return '\v';
-    case 'f': return '\f';
-    case 'r': return '\r';
-    case '\"': return '\"';
-    case '\'': return '\'';
-    case '\\': return '\\';
-    }
-    return '\0';
 }
 
 Object *obj_new_bool(bool b)
@@ -213,125 +180,6 @@ Object *obj_cp(Object *obj)
     return ret;
 }
 
-static inline Object *obj_read_bool(char *s)
-{
-	return obj_new_bool(EQ(s, "true") ? true : false);
-}
-
-static Object *obj_read_num(char *s)
-{
-    errno = 0;
-    char *end;
-    double n = strtod(s, &end);
-    if (errno == ERANGE || *end != '\0')
-        return obj_new_err("malformed number");
-    return obj_new_num(n);
-}
-
-static Object *obj_read_sym(char *str, size_t *pos)
-{
-    char *tmp = calloc(1, 1);
-    while (SYM_OR_NUM(str, *pos) && str[*pos]) {
-        tmp = realloc(tmp, strlen(tmp) + 2); /* + 2, 1 for character, 1 for null term */
-        tmp[strlen(tmp)] = str[(*pos)++];
-        tmp[strlen(tmp) + 1] = '\0';
-    }
-    bool number = *tmp == '-' || *tmp == '.' || isdigit(*tmp);
-    for (size_t i = 1; tmp[i]; ++i) {
-        if (tmp[i] == '.') break;
-        if (!isdigit(tmp[i])) {
-            number = false;
-            break;
-        }
-    }
-    if (!tmp[1] && (*tmp == '-' || *tmp == '.')) number = false; /* it's just a minus or dot */
-
-    Object *ret;
-    if (number) ret = obj_read_num(tmp);
-    else if (EQ(tmp, "true") || EQ(tmp, "false")) ret = obj_read_bool(tmp);
-    else ret = obj_new_sym(tmp);
-    free(tmp);
-    return ret;
-}
-
-static Object *obj_read_str(char *str, size_t *pos)
-{
-    char *tmp = calloc(1, 1);
-
-    ++*pos; /* skip opening quote */
-
-    while (str[*pos] != '\'') {
-        char c = str[*pos];
-        if (!c) {
-            free(tmp);
-            return obj_new_err("string literal is missing a closing quote");
-        }
-        if (c == '\\') {
-            ++*pos; /* advance to character after backslash */
-            if (strchr(unescape_chars, str[*pos])) {
-                c = obj_unescape(str[*pos]);
-            } else {
-                free(tmp);
-                return obj_new_err("unknown escape sequence '\\%c'", str[*pos]);
-            }
-        }
-        tmp = realloc(tmp, strlen(tmp) + 2);
-        tmp[strlen(tmp)] = c;
-        tmp[strlen(tmp) + 1] = '\0';
-        ++*pos;
-    }
-
-    ++*pos; /* skip closing quote */
-    Object *ret = obj_new_str(tmp);
-    free(tmp);
-    return ret;
-}
-
-static Object *obj_read(char *, size_t *);
-
-Object *obj_read_expr(char *str, size_t *pos, char end)
-{
-    Object *a = end == ']' ? obj_new_bexpr() : obj_new_sexpr(), *b;
-
-    while (str[*pos] != end) {
-        if ((b = obj_read(str, pos))->type == O_ERROR) {
-            obj_free(a);
-            return b;
-        } else {
-            obj_append(a, b);
-        }
-    }
-    ++*pos; /* skip 'end' char */
-    return a;
-}
-
-Object *obj_read(char *str, size_t *pos)
-{
-    Object *ret;
-
-    SKIP_WS(str, *pos);
-
-    if (!str[*pos]) return obj_new_err("unexpected EOF or end of input");
-
-    if (str[*pos] == '(') {
-        ++*pos;
-        ret = obj_read_expr(str, pos, ')');
-    } else if (str[*pos] == '[') {
-        ++*pos;
-        ret = obj_read_expr(str, pos, ']');
-    } else if (SYM_OR_NUM(str, *pos)) {
-        ret = obj_read_sym(str, pos);
-    } else if (str[*pos] == '\'') {
-        ret = obj_read_str(str, pos);
-    } else {
-        ret = obj_new_err("i don't know how to handle '%c'", str[*pos]);
-    }
-
-    SKIP_WS(str, *pos);
-
-    return ret;
-}
-
 Object *obj_call(Env *env, Object *func, Object *list)
 {
     if (func->r.f.builtin)
@@ -346,7 +194,7 @@ Object *obj_call(Env *env, Object *func, Object *list)
                 total, given);
         }
         Object *symbol = obj_pop(func->r.f.params, 0);
-        if (EQ(symbol->r.symbol, "@")) {
+        if (!strcmp(symbol->r.symbol, "@")) {
             if (func->r.f.params->nelem != 1) {
                 obj_free(list);
                 return obj_new_err("@ is missing a symbol");
@@ -394,9 +242,9 @@ bool obj_equal(Object *a, Object *b)
     switch (a->type) {
     case O_BOOLEAN: return a->r.boolean == b->r.boolean;
     case O_NUMBER: return a->r.number == b->r.number;
-    case O_SYMBOL: return EQ(a->r.symbol, b->r.symbol);
-    case O_STRING: return EQ(a->r.string, b->r.string);
-    case O_ERROR: return EQ(a->r.error, b->r.error);
+    case O_SYMBOL: return !strcmp(a->r.symbol, b->r.symbol);
+    case O_STRING: return !strcmp(a->r.string, b->r.string);
+    case O_ERROR: return !strcmp(a->r.error, b->r.error);
     case O_FUNC:
         return a->r.f.builtin || b->r.f.builtin
             ? a->r.f.builtin == b->r.f.builtin

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "util.h"
 #include "env.h"
@@ -18,7 +19,7 @@ Env *env_new(void)
 Object *env_get(Env *env, Object *obj)
 {
     for (size_t i = 0; i < env->nelem; ++i)
-        if (EQ(env->sym_list[i], obj->r.symbol))
+        if (!strcmp(env->sym_list[i], obj->r.symbol))
             return obj_cp(env->obj_list[i]);
     return env->parent
         ? env_get(env->parent, obj)
@@ -29,7 +30,7 @@ void env_set(Env *env, Object *key, Object *obj)
 {
     /* check for existing variable(s) */
     for (size_t i = 0; i < env->nelem; ++i)
-        if (EQ(env->sym_list[i], key->r.symbol)) {
+        if (!strcmp(env->sym_list[i], key->r.symbol)) {
             obj_free(env->obj_list[i]);
             env->obj_list[i] = obj_cp(obj);
             return;

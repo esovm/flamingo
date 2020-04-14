@@ -102,10 +102,10 @@ bool obj_equal(Object *, Object *);
 bool obj_is_truthy(Object *);
 Object *obj_to_bool(Object *);
 
-Object *process_op(Env *, Object *, const char *);
-Object *process_rel(Env *, Object *, const char *);
-Object *process_log(Env *, Object *, const char *);
-Object *process_var(Env *, Object *, const char *);
+Object *read_op(Env *, Object *, const char *);
+Object *read_rel(Env *, Object *, const char *);
+Object *read_log(Env *, Object *, const char *);
+Object *read_var(Env *, Object *, const char *);
 
 Object *bi_exit(Env *, Object *);
 Object *bi_list(Env *, Object *);
@@ -122,73 +122,73 @@ Object *bi_puts(Env *, Object *);
 Object *bi_err(Env *, Object *);
 
 static inline Object *bi_add(Env *env, Object *obj) {
-    return process_op(env, obj, "+");
+    return read_op(env, obj, "+");
 }
 static inline Object *bi_sub(Env *env, Object *obj) {
-    return process_op(env, obj, "-");
+    return read_op(env, obj, "-");
 }
 static inline Object *bi_mul(Env *env, Object *obj) {
-    return process_op(env, obj, "*");
+    return read_op(env, obj, "*");
 }
 static inline Object *bi_div(Env *env, Object *obj) {
-    return process_op(env, obj, "/");
+    return read_op(env, obj, "/");
 }
 static inline Object *bi_mod(Env *env, Object *obj) {
-    return process_op(env, obj, "%");
+    return read_op(env, obj, "%");
 }
 static inline Object *bi_bxor(Env *env, Object *obj) {
-    return process_op(env, obj, "^");
+    return read_op(env, obj, "^");
 }
 static inline Object *bi_band(Env *env, Object *obj) {
-    return process_op(env, obj, "&");
+    return read_op(env, obj, "&");
 }
 static inline Object *bi_bor(Env *env, Object *obj) {
-    return process_op(env, obj, "|");
+    return read_op(env, obj, "|");
 }
 static inline Object *bi_bnot(Env *env, Object *obj) {
-    return process_op(env, obj, "~");
+    return read_op(env, obj, "~");
 }
 static inline Object *bi_pow(Env *env, Object *obj) {
-    return process_op(env, obj, "pow");
+    return read_op(env, obj, "pow");
 }
 static inline Object *bi_min(Env *env, Object *obj) {
-    return process_op(env, obj, "min");
+    return read_op(env, obj, "min");
 }
 static inline Object *bi_max(Env *env, Object *obj) {
-    return process_op(env, obj, "max");
+    return read_op(env, obj, "max");
 }
 static inline Object *bi_lt(Env *env, Object *obj) {
-    return process_rel(env, obj, "<");
+    return read_rel(env, obj, "<");
 }
 static inline Object *bi_le(Env *env, Object *obj) {
-    return process_rel(env, obj, "<=");
+    return read_rel(env, obj, "<=");
 }
 static inline Object *bi_gt(Env *env, Object *obj) {
-    return process_rel(env, obj, ">");
+    return read_rel(env, obj, ">");
 }
 static inline Object *bi_ge(Env *env, Object *obj) {
-    return process_rel(env, obj, ">=");
+    return read_rel(env, obj, ">=");
 }
 static inline Object *bi_eq(Env *env, Object *obj) {
-    return process_rel(env, obj, "==");
+    return read_rel(env, obj, "==");
 }
 static inline Object *bi_ne(Env *env, Object *obj) {
-    return process_rel(env, obj, "!=");
+    return read_rel(env, obj, "!=");
 }
 static inline Object *bi_not(Env *env, Object *obj) {
-    return process_log(env, obj, "not");
+    return read_log(env, obj, "not");
 }
 static inline Object *bi_or(Env *env, Object *obj) {
-    return process_log(env, obj, "or");
+    return read_log(env, obj, "or");
 }
 static inline Object *bi_and(Env *env, Object *obj) {
-    return process_log(env, obj, "and");
+    return read_log(env, obj, "and");
 }
 static inline Object *bi_def(Env *env, Object *list) { /* global */
-    return process_var(env, list, "def");
+    return read_var(env, list, "def");
 }
 static inline Object *bi_loc(Env *env, Object *list) { /* local */
-    return process_var(env, list, "=");
+    return read_var(env, list, "=");
 }
 
 #endif /* FLAMINGO_OBJECT_H */

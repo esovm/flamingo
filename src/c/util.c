@@ -3,30 +3,30 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
-#include <errno.h>
-#include <float.h>
 
 #include "util.h"
 
-// void fuk(const char *fmt, ...)
-// {
-//     va_list ap;
-
-//     va_start(ap, fmt);
-//     vfprintf(stderr, fmt, ap);
-//     perror(" ");
-
-//     va_end(ap);
-//     exit(1);
-// }
-
-char *dupstr(const char *s)
+/* print error to stderr & exit the program */
+void kill(const char *fmt, ...)
 {
-    size_t len = strlen(s) + 1;
-    char *p = malloc(len);
-    return p ? memcpy(p, s, len) : NULL;
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    perror(" ");
+
+    va_end(ap);
+    exit(1);
 }
 
+/* duplicate string s, caller is responsible for freeing `p` */
+char *dupstr(const char *str)
+{
+    size_t len = strlen(str) + 1;
+    char *p = malloc(len);
+    return p ? memcpy(p, str, len) : NULL;
+}
+
+/* strip both leading & trailing whitespace from string */
 char *trim(char *str)
 {
 	/* trim leading space */
@@ -43,6 +43,7 @@ char *trim(char *str)
 	return str;
 }
 
+/* read contents of `path` into `buf`. return it, or NULL. it's caller responsibility to free `buf` */
 char *readfile(const char *path)
 {
     FILE *fp = fopen(path, "r");

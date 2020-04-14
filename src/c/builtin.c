@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "object.h"
 #include "env.h"
@@ -122,7 +123,7 @@ Object *bi_var(Env *env, Object *list, const char *func)
     for (size_t i = 0; i < symbols->nelem; ++i) {
         if (*func == '=')
             env_set(env, symbols->cell[i], list->cell[i + 1]);
-        else if (EQ("def", func))
+        else if (!strcmp("def", func))
             env_set_global(env, symbols->cell[i], list->cell[i + 1]);
     }
 
@@ -174,7 +175,7 @@ Object *bi_use(Env *env, Object *list)
     char *name = list->cell[0]->r.string, *data;
     bool to_free = false;
 
-    if (!EQ(&list->cell[0]->r.string[strlen(list->cell[0]->r.string) - 3], ".fl")) {
+    if (!!strcmp(&list->cell[0]->r.string[strlen(list->cell[0]->r.string) - 3], ".fl")) {
         /* + 4 for '.fl' extension and null terminator */
         name = malloc(strlen(list->cell[0]->r.string) + 4);
         strcpy(name, list->cell[0]->r.string);
