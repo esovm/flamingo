@@ -51,6 +51,15 @@ List *list_new(void)
     return list;
 }
 
+List *list_copy(List *list)
+{
+    List *ret = malloc(sizeof(List));
+    ret->len = list->len;
+    ret->head = list->head;
+    ret->tail = list->tail;
+    return ret;
+}
+
 ListNode *list_prepend(List *list, ListNode *node)
 {
     if (!node) return NULL;
@@ -120,11 +129,12 @@ ListNode *list_find(List *list, void *val)
     ListIter *it = list_iter_new(list, LIST_HEAD);
     ListNode *node;
 
-    while ((node = list_iter_next(it)))
+    while ((node = list_iter_next(it))) {
         if (node->val == val) {
             list_iter_free(it);
             return node;
         }
+    }
 
     list_iter_free(it);
     return NULL;

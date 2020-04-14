@@ -49,6 +49,7 @@ ListNode *list_iter_next(ListIter *);
 void list_iter_free(ListIter *);
 
 List *list_new(void);
+List *list_copy(List *);
 ListNode *list_prepend(List *, ListNode *);
 ListNode *list_append(List *, ListNode *);
 ListNode *list_find(List *, void *);

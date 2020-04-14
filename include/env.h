@@ -2,11 +2,14 @@
 #define FLAMINGO_ENV_H
 
 #include "object.h"
+#include "../lib/linked_list/list.h"
 
 struct Env {
-    size_t nelem;
-    char **sym_list;
-    Object **obj_list;
+    // size_t nelem;
+    // char **sym_list;
+    // Object **obj_list;
+    List *symbols;
+    List *objects;
     Env *parent;
 };
 

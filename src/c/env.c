@@ -8,9 +8,11 @@ Env *env_new(void)
 {
     Env *ret = malloc(sizeof(Env));
 
-    ret->nelem = 0;
-    ret->sym_list = NULL;
-    ret->obj_list = NULL;
+    // ret->nelem = 0;
+    // ret->sym_list = NULL;
+    // ret->obj_list = NULL;
+    ret->symbols = list_new();
+    ret->objects = list_new();
     ret->parent = NULL;
 
     return ret;
@@ -18,9 +20,14 @@ Env *env_new(void)
 
 Object *env_get(Env *env, Object *obj)
 {
-    for (size_t i = 0; i < env->nelem; ++i)
-        if (!strcmp(env->sym_list[i], obj->r.symbol))
-            return obj_cp(env->obj_list[i]);
+    // for (size_t i = 0; i < env->nelem; ++i)
+    //     if (!strcmp(env->sym_list[i], obj->r.symbol))
+    //         return obj_cp(env->obj_list[i]);
+
+    for (size_t i = 0; i < env->symbols->len; ++i)
+        if (!strcmp(list_at(env->symbols, i)->val, obj->r.symbol))
+            return obj_cp(list_at(env->objects, i)->val);
+
     return env->parent
         ? env_get(env->parent, obj)
         : obj_new_err("Use of undefined symbol '%s'", obj->r.symbol);
@@ -29,19 +36,30 @@ Object *env_get(Env *env, Object *obj)
 void env_set(Env *env, Object *key, Object *obj)
 {
     /* check for existing variable(s) */
-    for (size_t i = 0; i < env->nelem; ++i)
-        if (!strcmp(env->sym_list[i], key->r.symbol)) {
-            obj_free(env->obj_list[i]);
-            env->obj_list[i] = obj_cp(obj);
+    // for (size_t i = 0; i < env->nelem; ++i) {
+    //     if (!strcmp(env->sym_list[i], key->r.symbol)) {
+    //         obj_free(env->obj_list[i]);
+    //         env->obj_list[i] = obj_cp(obj);
+    //         return;
+    //     }
+    // }
+    for (size_t i = 0; i < env->symbols->len; ++i) {
+        if (!strcmp(list_at(env->symbols, i)->val, key->r.symbol)) {
+            obj_free(list_at(env->objects, i)->val);
+            list_at(env->objects, i)->val = obj_cp(obj);
             return;
         }
+    }
 
     /* none found, insert new at end */
-    env->sym_list = realloc(env->sym_list, ++env->nelem * sizeof(char *));
-    env->obj_list = realloc(env->obj_list, env->nelem * sizeof(Object *));
+    // env->sym_list = realloc(env->sym_list, ++env->nelem * sizeof(char *));
+    // env->obj_list = realloc(env->obj_list, env->nelem * sizeof(Object *));
 
-    env->sym_list[env->nelem - 1] = dupstr(key->r.symbol);
-    env->obj_list[env->nelem - 1] = obj_cp(obj);
+    // env->sym_list[env->nelem - 1] = dupstr(key->r.symbol);
+    // env->obj_list[env->nelem - 1] = obj_cp(obj);
+
+    list_append(env->symbols, list_node_new(dupstr(key->r.symbol)));
+    list_append(env->objects, list_node_new(obj_cp(obj)));
 }
 
 void env_set_global(Env *env, Object *key, Object *obj)
@@ -54,14 +72,21 @@ Env *env_cp(Env *env)
 {
     Env *ret = malloc(sizeof(Env));
 
-    ret->nelem = env->nelem;
+    // ret->nelem = env->nelem;
     ret->parent = env->parent;
-    ret->sym_list = malloc(ret->nelem * sizeof(char *));
-    ret->obj_list = malloc(ret->nelem * sizeof(Object *));
+    // ret->sym_list = malloc(ret->nelem * sizeof(char *));
+    // ret->obj_list = malloc(ret->nelem * sizeof(Object *));
 
-    for (size_t i = 0; i < ret->nelem; ++i) {
-        ret->sym_list[i] = dupstr(env->sym_list[i]);
-        ret->obj_list[i] = obj_cp(env->obj_list[i]);
+    ret->symbols = list_copy(env->symbols);
+    ret->objects = list_copy(env->objects);
+
+    // for (size_t i = 0; i < ret->nelem; ++i) {
+    //     ret->sym_list[i] = dupstr(env->sym_list[i]);
+    //     ret->obj_list[i] = obj_cp(env->obj_list[i]);
+    // }
+    for (size_t i = 0; i < ret->symbols->len; ++i) {
+        list_append(ret->symbols, list_node_new(dupstr(list_at(env->symbols, i)->val)));
+        list_append(ret->objects, list_node_new(obj_cp(list_at(env->objects, i)->val)));
     }
 
     return ret;
@@ -124,11 +149,19 @@ void env_register_all(Env *env)
 
 void env_free(Env *env)
 {
-    for (size_t i = 0; i < env->nelem; ++i) {
-        free(env->sym_list[i]);
-        obj_free(env->obj_list[i]);
+    // for (size_t i = 0; i < env->nelem; ++i) {
+    //     free(env->sym_list[i]);
+    //     obj_free(env->obj_list[i]);
+    // }
+    // free(env->sym_list);
+    // free(env->obj_list);
+
+    for (size_t i = 0; i < env->symbols->len; ++i) {
+        free(list_at(env->symbols, i)->val);
+        obj_free(list_at(env->objects, i)->val);
     }
-    free(env->sym_list);
-    free(env->obj_list);
+
+    list_free(env->symbols);
+    list_free(env->objects);
     free(env);
 }

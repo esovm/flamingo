@@ -175,7 +175,8 @@ Object *bi_use(Env *env, Object *list)
     char *name = list->cell[0]->r.string, *data;
     bool to_free = false;
 
-    if (!!strcmp(&list->cell[0]->r.string[strlen(list->cell[0]->r.string) - 3], ".fl")) {
+    /* make the .fl extension optional */
+    if (strcmp(&list->cell[0]->r.string[strlen(list->cell[0]->r.string) - 3], ".fl")) {
         /* + 4 for '.fl' extension and null terminator */
         name = malloc(strlen(list->cell[0]->r.string) + 4);
         strcpy(name, list->cell[0]->r.string);
