@@ -1,0 +1,26 @@
+#########################################################
+###############   Flamingo math library   ###############
+#########################################################
+
+(use 'src/fl/base.fl')
+
+### constants
+
+(def [PI] 3.141592653589793)
+(def [E] 2.718281828459045)
+
+### functions
+
+# return the `n`-th power of `b`.
+(fn [pow b n] [
+  if (== n 0)
+    [1]
+    [if (== n 1)
+      [b]
+      [if (< n 0)
+        [pow (/ 1 b) (- n)]
+        [* (pow b (% n 2)) (pow (* b b) (// n 2))]]]
+])
+
+# return the sum of `l`'s elements.
+(fn [sum l] [unpack + l])

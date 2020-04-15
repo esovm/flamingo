@@ -1,4 +1,6 @@
+#############################################################
 ###############   Flamingo standard library   ###############
+#############################################################
 
 ### constants
 
@@ -45,10 +47,10 @@
 ])
 
 # return the n-th element of list `l`.
-(fn [n-th n l] [
+(fn [nth n l] [
   if (not n)
     [st l]
-    [n-th (- n 1) (rest l)]
+    [nth (- n 1) (rest l)]
 ])
 
 # apply function `func` on each element of list `l`.
@@ -58,17 +60,17 @@
     [attach (list (func (st l))) (map func (rest l))]
 ])
 
-# evaluate expressions in `l` from left to right and return last one
+# evaluate expressions in `l` from left to right and return last one.
 (fn [do & l] [
   if (== l null) [null] [last l]
 ])
 
-# create a new, more local scope
+# create a new, more local scope.
 (fn [let b] [(
   ($ [_] b) ()
 )])
 
-# when-else function
+# when-else function.
 (fn [when @ pairs] [
   if (== pairs [])
     [err 'nothing to `when` on']
@@ -77,7 +79,7 @@
       [unpack when (rest pairs)]]
 ])
 
-# compare `x` to the first value of each pair and if equal, eval the second
+# compare `x` to the first value of each pair and if equal, eval the second.
 (fn [match x @ pairs] [
   if (== pairs null)
     [err 'no match was found']

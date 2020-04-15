@@ -133,6 +133,9 @@ static inline Object *bi_mul(Env *env, Object *obj) {
 static inline Object *bi_div(Env *env, Object *obj) {
     return read_op(env, obj, "/");
 }
+static inline Object *bi_idiv(Env *env, Object *obj) { /* idiv - integer division */
+    return read_op(env, obj, "//");
+}
 static inline Object *bi_mod(Env *env, Object *obj) {
     return read_op(env, obj, "%");
 }
@@ -147,9 +150,6 @@ static inline Object *bi_bor(Env *env, Object *obj) {
 }
 static inline Object *bi_bnot(Env *env, Object *obj) {
     return read_op(env, obj, "~");
-}
-static inline Object *bi_pow(Env *env, Object *obj) {
-    return read_op(env, obj, "pow");
 }
 static inline Object *bi_min(Env *env, Object *obj) {
     return read_op(env, obj, "min");

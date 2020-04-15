@@ -60,13 +60,13 @@ Object *read_op(Env *env, Object *list, const char *op)
         case '-': a->r.number -= b->r.number; break;
         case '*': a->r.number *= b->r.number; break;
         case '/':
-            if (!b->r.number) {
+            if (b->r.number == 0) {
                 obj_free(a);
                 obj_free(b);
                 a = obj_new_err("Division by 0 is undefined");
                 goto out;
             }
-            a->r.number /= b->r.number;
+            a->r.number = op[1] == '/' ? (int)a->r.number / (int)b->r.number : a->r.number / b->r.number;
             break;
         case '%': a->r.number = fmod(a->r.number, b->r.number); break;
         case '^': a->r.number = (int)a->r.number ^ (int)b->r.number; break;
@@ -74,7 +74,6 @@ Object *read_op(Env *env, Object *list, const char *op)
         case '|': a->r.number = (int)a->r.number | (int)b->r.number; break;
         }
 
-        if (!strcmp(op, "pow")) a->r.number = pow(a->r.number, b->r.number);
         if (!strcmp(op, "min")) a->r.number = MIN(a->r.number, b->r.number);
         if (!strcmp(op, "max")) a->r.number = MAX(a->r.number, b->r.number);
 

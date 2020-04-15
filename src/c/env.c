@@ -84,12 +84,12 @@ void env_register_all(Env *env)
     env_register(env, "-", bi_sub);
     env_register(env, "*", bi_mul);
     env_register(env, "/", bi_div);
+    env_register(env, "//", bi_idiv);
     env_register(env, "%", bi_mod);
     env_register(env, "^", bi_bxor);
     env_register(env, "&", bi_band);
     env_register(env, "|", bi_bor);
     env_register(env, "~", bi_bnot);
-    env_register(env, "pow", bi_pow);
     env_register(env, "min", bi_min);
     env_register(env, "max", bi_max);
 
