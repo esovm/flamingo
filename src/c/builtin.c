@@ -172,19 +172,9 @@ Object *bi_use(Env *env, Object *list)
     NARG("use", list, 1);
     EXPECT("use", list, 0, O_STRING);
 
-    char *name = list->cell[0]->r.string, *data;
-    bool to_free = false;
-
-    /* make the .fl extension optional */
-    if (strcmp(&list->cell[0]->r.string[strlen(list->cell[0]->r.string) - 3], ".fl")) {
-        /* + 4 for '.fl' extension and null terminator */
-        name = malloc(strlen(list->cell[0]->r.string) + 4);
-        strcpy(name, list->cell[0]->r.string);
-        strcat(name, ".fl");
-        to_free = true;
-    }
-    if (!(data = readfile(name))) {
-        Object *error = obj_new_err("Cannot use file \"%s\"", name);
+    char *data = readfile(list->cell[0]->r.string);
+    if (!data) {
+        Object *error = obj_new_err("Cannot use file \"%s\"", list->cell[0]->r.string);
         obj_free(list);
         return error;
     }
@@ -204,7 +194,6 @@ Object *bi_use(Env *env, Object *list)
         OBJ_DUMP_LN(expr);
     }
 
-    if (to_free) free(name);
     obj_free(expr);
     obj_free(list);
 
