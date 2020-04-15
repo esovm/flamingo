@@ -32,7 +32,7 @@ void env_set(Env *env, Object *key, Object *val)
     /* check for existing variable(s) */
     Object *findme;
     if ((findme = map_get(&env->map, key->r.symbol))) {
-        obj_free(val);
+        map_remove(&env->map, key->r.symbol);
         map_set(&env->map, key->r.symbol, *obj_cp(val));
         return;
     }
@@ -41,10 +41,10 @@ void env_set(Env *env, Object *key, Object *val)
     map_set(&env->map, key->r.symbol, *obj_cp(val));
 }
 
-void env_set_global(Env *env, Object *key, Object *obj)
+void env_set_global(Env *env, Object *key, Object *val)
 {
     for (; env->parent; env = env->parent);
-    env_set(env, key, obj);
+    env_set(env, key, val);
 }
 
 Env *env_cp(Env *env)
@@ -54,6 +54,7 @@ Env *env_cp(Env *env)
 
     ret->parent = env->parent;
     ret->map = env->map;
+    map_init(&ret->map);
 
     return ret;
 }

@@ -8,6 +8,7 @@ release:
 debug:
 	@$(MAKE) -f scripts/build.mk NAME=flamingo MODE=debug SRCDIR=src/c
 run:
+	@$(MAKE) clean
 	@$(MAKE) release
 	@./flamingo
 clean:
