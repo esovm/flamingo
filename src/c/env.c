@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -7,59 +8,37 @@
 Env *env_new(void)
 {
     Env *ret = malloc(sizeof(Env));
+    if (!ret) return NULL;
 
-    // ret->nelem = 0;
-    // ret->sym_list = NULL;
-    // ret->obj_list = NULL;
-    ret->symbols = list_new();
-    ret->objects = list_new();
     ret->parent = NULL;
+    map_init(&ret->map);
 
     return ret;
 }
 
 Object *env_get(Env *env, Object *obj)
 {
-    // for (size_t i = 0; i < env->nelem; ++i)
-    //     if (!strcmp(env->sym_list[i], obj->r.symbol))
-    //         return obj_cp(env->obj_list[i]);
-
-    for (size_t i = 0; i < env->symbols->len; ++i)
-        if (!strcmp(list_at(env->symbols, i)->val, obj->r.symbol))
-            return obj_cp(list_at(env->objects, i)->val);
+    Object *findme;
+    if ((findme = map_get(&env->map, obj->r.symbol)))
+        return obj_cp(findme);
 
     return env->parent
         ? env_get(env->parent, obj)
         : obj_new_err("Use of undefined symbol '%s'", obj->r.symbol);
 }
 
-void env_set(Env *env, Object *key, Object *obj)
+void env_set(Env *env, Object *key, Object *val)
 {
     /* check for existing variable(s) */
-    // for (size_t i = 0; i < env->nelem; ++i) {
-    //     if (!strcmp(env->sym_list[i], key->r.symbol)) {
-    //         obj_free(env->obj_list[i]);
-    //         env->obj_list[i] = obj_cp(obj);
-    //         return;
-    //     }
-    // }
-    for (size_t i = 0; i < env->symbols->len; ++i) {
-        if (!strcmp(list_at(env->symbols, i)->val, key->r.symbol)) {
-            obj_free(list_at(env->objects, i)->val);
-            list_at(env->objects, i)->val = obj_cp(obj);
-            return;
-        }
+    Object *findme;
+    if ((findme = map_get(&env->map, key->r.symbol))) {
+        obj_free(val);
+        map_set(&env->map, key->r.symbol, *obj_cp(val));
+        return;
     }
 
-    /* none found, insert new at end */
-    // env->sym_list = realloc(env->sym_list, ++env->nelem * sizeof(char *));
-    // env->obj_list = realloc(env->obj_list, env->nelem * sizeof(Object *));
-
-    // env->sym_list[env->nelem - 1] = dupstr(key->r.symbol);
-    // env->obj_list[env->nelem - 1] = obj_cp(obj);
-
-    list_append(env->symbols, list_node_new(dupstr(key->r.symbol)));
-    list_append(env->objects, list_node_new(obj_cp(obj)));
+    /* none found, insert new */
+    map_set(&env->map, key->r.symbol, *obj_cp(val));
 }
 
 void env_set_global(Env *env, Object *key, Object *obj)
@@ -71,23 +50,10 @@ void env_set_global(Env *env, Object *key, Object *obj)
 Env *env_cp(Env *env)
 {
     Env *ret = malloc(sizeof(Env));
+    if (!ret) return NULL;
 
-    // ret->nelem = env->nelem;
     ret->parent = env->parent;
-    // ret->sym_list = malloc(ret->nelem * sizeof(char *));
-    // ret->obj_list = malloc(ret->nelem * sizeof(Object *));
-
-    ret->symbols = list_copy(env->symbols);
-    ret->objects = list_copy(env->objects);
-
-    // for (size_t i = 0; i < ret->nelem; ++i) {
-    //     ret->sym_list[i] = dupstr(env->sym_list[i]);
-    //     ret->obj_list[i] = obj_cp(env->obj_list[i]);
-    // }
-    for (size_t i = 0; i < ret->symbols->len; ++i) {
-        list_append(ret->symbols, list_node_new(dupstr(list_at(env->symbols, i)->val)));
-        list_append(ret->objects, list_node_new(obj_cp(list_at(env->objects, i)->val)));
-    }
+    ret->map = env->map;
 
     return ret;
 }
@@ -149,19 +115,6 @@ void env_register_all(Env *env)
 
 void env_free(Env *env)
 {
-    // for (size_t i = 0; i < env->nelem; ++i) {
-    //     free(env->sym_list[i]);
-    //     obj_free(env->obj_list[i]);
-    // }
-    // free(env->sym_list);
-    // free(env->obj_list);
-
-    for (size_t i = 0; i < env->symbols->len; ++i) {
-        free(list_at(env->symbols, i)->val);
-        obj_free(list_at(env->objects, i)->val);
-    }
-
-    list_free(env->symbols);
-    list_free(env->objects);
+    map_deinit(&env->map);
     free(env);
 }
