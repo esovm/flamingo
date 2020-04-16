@@ -12,7 +12,7 @@ const char *const obj_type_arr[] = {
    "boolean", "number", "error", "symbol", "string", "function", "s-expression", "b-expression"
 };
 
-static char *obj_escape(char c)
+static char *escape(char c)
 {
     switch (c) {
     case '\a': return "\\a";
@@ -194,7 +194,7 @@ Object *obj_call(Env *env, Object *func, Object *list)
                 total, given);
         }
         Object *symbol = obj_pop(func->r.f.params, 0);
-        if (!strcmp(symbol->r.symbol, "@")) {
+        if (strcmp(symbol->r.symbol, "@") == 0) {
             if (func->r.f.params->nelem != 1) {
                 obj_free(list);
                 return obj_new_err("@ is missing a symbol");
@@ -242,9 +242,9 @@ bool obj_equal(Object *a, Object *b)
     switch (a->type) {
     case O_BOOLEAN: return a->r.boolean == b->r.boolean;
     case O_NUMBER: return a->r.number == b->r.number;
-    case O_SYMBOL: return !strcmp(a->r.symbol, b->r.symbol);
-    case O_STRING: return !strcmp(a->r.string, b->r.string);
-    case O_ERROR: return !strcmp(a->r.error, b->r.error);
+    case O_SYMBOL: return strcmp(a->r.symbol, b->r.symbol) == 0;
+    case O_STRING: return strcmp(a->r.string, b->r.string) == 0;
+    case O_ERROR: return strcmp(a->r.error, b->r.error) == 0;
     case O_FUNC:
         return a->r.f.builtin || b->r.f.builtin
             ? a->r.f.builtin == b->r.f.builtin
@@ -334,7 +334,7 @@ void obj_dump_str(Object *obj)
 {
     char c;
     for (size_t i = 0; (c = obj->r.string[i]); ++i)
-        strchr(escape_chars, c) ? fputs(obj_escape(c), stdout) : putchar(c);
+        strchr(escape_chars, c) ? fputs(escape(c), stdout) : putchar(c);
 }
 
 void obj_dump(Object *obj)

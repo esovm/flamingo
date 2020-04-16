@@ -18,11 +18,11 @@ int main(int argc, char **argv)
         printf("Flamingo %s\ntype \"exit <status>\" to terminate\n", FLAMINGO_VERSION);
 
         while ((line = readline("=> "))) {
-            if (!*line || !*trim(line)) {
+            if (!*line || !*trim(line) || *trim(line) == '#') {
+                /* ignore comments and empty/whitespace-only strings */
                 free(line);
                 continue;
             }
-
             size_t pos = 0;
             Object *e = obj_read_expr(line, &pos, '\0'), *obj = obj_eval(env, e);
             OBJ_DUMP_LN(obj);

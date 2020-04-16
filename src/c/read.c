@@ -23,7 +23,7 @@ static void skip_whitespace(const char *str, size_t *pos)
     }
 }
 
-static char obj_unescape(char c)
+static char unescape(char c)
 {
     switch (c) {
     case 'a': return '\a';
@@ -74,8 +74,8 @@ Object *read_op(Env *env, Object *list, const char *op)
         case '|': a->r.number = (int)a->r.number | (int)b->r.number; break;
         }
 
-        if (!strcmp(op, "min")) a->r.number = MIN(a->r.number, b->r.number);
-        if (!strcmp(op, "max")) a->r.number = MAX(a->r.number, b->r.number);
+        if (strcmp(op, "min") == 0) a->r.number = MIN(a->r.number, b->r.number);
+        if (strcmp(op, "max") == 0) a->r.number = MAX(a->r.number, b->r.number);
 
         obj_free(b);
     }
@@ -109,9 +109,9 @@ Object *read_rel(Env *env, Object *list, const char *op)
             : list->cell[0]->r.number > list->cell[1]->r.number;
         break;
     }
-    if (!strcmp(op, "=="))
+    if (strcmp(op, "==") == 0)
         r = obj_equal(list->cell[0], list->cell[1]);
-    else if (!strcmp(op, "!="))
+    else if (strcmp(op, "!=") == 0)
         r = !obj_equal(list->cell[0], list->cell[1]);
 
     obj_free(list);
@@ -124,13 +124,13 @@ Object *read_log(Env *env, Object *list, const char *op)
     (void)env;
     Object *a = obj_to_bool(obj_pop(list, 0));
 
-    if (!strcmp(op, "not") && !list->nelem) a->r.boolean = !a->r.boolean;
+    if (strcmp(op, "not") == 0 && !list->nelem) a->r.boolean = !a->r.boolean;
 
     while (list->nelem) {
         Object *b = obj_to_bool(obj_pop(list, 0));
 
-        if (!strcmp(op, "or")) a->r.boolean = a->r.boolean || b->r.boolean;
-        else if (!strcmp(op, "and")) a->r.boolean = a->r.boolean && b->r.boolean;
+        if (strcmp(op, "or") == 0) a->r.boolean = a->r.boolean || b->r.boolean;
+        else if (strcmp(op, "and") == 0) a->r.boolean = a->r.boolean && b->r.boolean;
 
         obj_free(b);
     }
@@ -155,7 +155,7 @@ Object *read_var(Env *env, Object *list, const char *func)
     for (size_t i = 0; i < symbols->nelem; ++i) {
         if (*func == '=')
             env_set(env, symbols->cell[i], list->cell[i + 1]);
-        else if (!strcmp("def", func))
+        else if (strcmp("def", func) == 0)
             env_set_global(env, symbols->cell[i], list->cell[i + 1]);
     }
 
@@ -195,8 +195,8 @@ static Object *obj_read_sym(const char *str, size_t *pos)
     Object *ret;
     if (number)
         ret = obj_read_num(tmp);
-    else if (!strcmp(tmp, "true") || !strcmp(tmp, "false"))
-        ret = obj_new_bool(!strcmp(tmp, "true") ? true : false);
+    else if (strcmp(tmp, "true") == 0 || strcmp(tmp, "false") == 0)
+        ret = obj_new_bool(strcmp(tmp, "true") == 0 ? true : false);
     else
         ret = obj_new_sym(tmp);
     free(tmp);
@@ -218,7 +218,7 @@ static Object *obj_read_str(char *str, size_t *pos)
         if (c == '\\') {
             ++*pos; /* advance to character after backslash */
             if (strchr(unescape_chars, str[*pos])) {
-                c = obj_unescape(str[*pos]);
+                c = unescape(str[*pos]);
             } else {
                 free(tmp);
                 return obj_new_err("unknown escape sequence '\\%c'", str[*pos]);

@@ -87,7 +87,7 @@ static MapNode **map_getref(MapBase *m, const char *key)
     if (m->nbuckets > 0) {
         next = &m->buckets[map_bucketidx(m, hash)];
         while (*next) {
-            if ((*next)->hash == hash && !strcmp((char *)(*next + 1), key))
+            if ((*next)->hash == hash && strcmp((char *)(*next + 1), key) == 0)
                 return next;
             next = &(*next)->next;
         }
@@ -95,7 +95,7 @@ static MapNode **map_getref(MapBase *m, const char *key)
     return NULL;
 }
 
-void map_deinit_(MapBase *m)
+void map_free_(MapBase *m)
 {
     MapNode *next, *node;
     int i = m->nbuckets;

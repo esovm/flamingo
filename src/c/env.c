@@ -30,13 +30,11 @@ Object *env_get(Env *env, Object *obj)
 void env_set(Env *env, Object *key, Object *val)
 {
     /* check for existing variable(s) */
-    Object *findme;
-    if ((findme = map_get(&env->map, key->r.symbol))) {
+    if (map_get(&env->map, key->r.symbol)) {
         map_remove(&env->map, key->r.symbol);
         map_set(&env->map, key->r.symbol, *obj_cp(val));
         return;
     }
-
     /* none found, insert new */
     map_set(&env->map, key->r.symbol, *obj_cp(val));
 }
@@ -116,6 +114,6 @@ void env_register_all(Env *env)
 
 void env_free(Env *env)
 {
-    map_deinit(&env->map);
+    map_free(&env->map);
     free(env);
 }

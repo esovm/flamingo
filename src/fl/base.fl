@@ -46,7 +46,7 @@
     [def [l] (attach (rev (rest l)) (first l))]
 ])
 
-# return the n-th element of list `l`.
+# return the `n`-th element of list `l`.
 (fn [nth n l] [
   if (not n)
     [st l]
@@ -58,6 +58,14 @@
   if (== l null)
     [null]
     [attach (list (func (st l))) (map func (rest l))]
+])
+
+# return a new list with only the elements of list `l`
+# that passed the test implemented by function `func`.
+(fn [filter func l] [
+  if (== l null)
+    [null]
+    [attach (if (func (st l)) [first l] [null]) (filter func (rest l))]
 ])
 
 # evaluate expressions in `l` from left to right and return last one.

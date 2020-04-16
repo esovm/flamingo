@@ -16,8 +16,7 @@ typedef struct {
 } MapIter;
 
 #define map_t(T)      \
-    struct            \
-    {                 \
+    struct {          \
         MapBase base; \
         T *ref;       \
         T tmp;        \
@@ -25,7 +24,7 @@ typedef struct {
 
 #define map_init(m) memset(m, 0, sizeof(*(m)))
 
-#define map_deinit(m) map_deinit_(&(m)->base)
+#define map_free(m) map_free_(&(m)->base)
 
 #define map_get(m, key) ((m)->ref = map_get_(&(m)->base, key))
 
@@ -42,7 +41,7 @@ typedef struct {
 #define map_next(m, iter) \
     map_next_(&(m)->base, iter)
 
-void map_deinit_(MapBase *m);
+void map_free_(MapBase *m);
 void *map_get_(MapBase *m, const char *key);
 int map_set_(MapBase *m, const char *key, void *value, int vsize);
 void map_remove_(MapBase *m, const char *key);

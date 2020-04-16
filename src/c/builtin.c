@@ -108,30 +108,6 @@ Object *bi_init(Env *env, Object *obj)
     return first;
 }
 
-Object *bi_var(Env *env, Object *list, const char *func)
-{
-    EXPECT(func, list, 0, O_BEXPR);
-
-    Object *symbols = list->cell[0];
-    for (size_t i = 0; i < symbols->nelem; ++i)
-        OBJ_ENSURE_F(list, symbols->cell[i]->type == O_SYMBOL, "can only define symbol (got %s)",
-            obj_type_arr[symbols->cell[i]->type]);
-
-    OBJ_ENSURE_F(list, symbols->nelem == list->nelem - 1,
-        "incorrect number of arguments (%d) for %s", list->nelem - 1, func);
-
-    for (size_t i = 0; i < symbols->nelem; ++i) {
-        if (*func == '=')
-            env_set(env, symbols->cell[i], list->cell[i + 1]);
-        else if (!strcmp("def", func))
-            env_set_global(env, symbols->cell[i], list->cell[i + 1]);
-    }
-
-    obj_free(list);
-
-    return obj_new_sexpr();
-}
-
 Object *bi_lambda(Env *env, Object *list)
 {
     (void)env;
