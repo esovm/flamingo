@@ -69,7 +69,7 @@
 ])
 
 # evaluate expressions in `l` from left to right and return last one.
-(fn [do & l] [
+(fn [do @ l] [
   if (== l null) [null] [last l]
 ])
 
@@ -94,4 +94,16 @@
     [if (== x (st (st (pairs))))
       [nd (st pairs)]
       [unpack match (attach (list x) (rest pairs))]]
+])
+
+(fn [range-recursive i n lst step] [
+    if (> i (- n 1))
+        [lst]
+        [attach (range-recursive (+ i step) n lst step) (list (i))]
+])
+
+(fn [range from to step] [
+    if (> from to)
+    [range-recursive to from [] (abs step)]
+    [rev (range-recursive from to [] (abs step))]
 ])

@@ -24,3 +24,9 @@
 
 # return the sum of `l`'s elements.
 (fn [sum l] [unpack + l])
+
+(fn [abs n] [
+    if (< n 0)
+    [- n n n]
+    [n]
+])
