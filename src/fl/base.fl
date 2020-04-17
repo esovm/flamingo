@@ -20,10 +20,9 @@
 # unpack list `l` and call function `func` with its arguments.
 (fn [unpack func l] [eval (attach [func] l)])
 
-# return the first, second and third element of list `l`.
+# return the first and second elements of list `l`.
 (fn [st l] [eval (first l)])
 (fn [nd l] [eval (first (rest l))])
-(fn [rd l] [eval (first (rest (rest l)))])
 
 # return the length (i.e. number of elements) of list `l`.
 (fn [len l] [
@@ -68,8 +67,20 @@
     [attach (if (func (st l)) [first l] [null]) (filter func (rest l))]
 ])
 
+(fn [range-recursive i n l] [
+  if (> i n)
+    [l]
+    [attach (range-recursive (+ i 1) n l) (list (- (+ n 1) i))]
+])
+
+(fn [range from to] [
+  if (< from to)
+    [range-recursive from to []]
+    [rev (range-recursive to from [])]
+])
+
 # evaluate expressions in `l` from left to right and return last one.
-(fn [do & l] [
+(fn [do @ l] [
   if (== l null) [null] [last l]
 ])
 

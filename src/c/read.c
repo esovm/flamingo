@@ -176,12 +176,17 @@ static Object *obj_read_num(const char *str)
 
 static Object *obj_read_sym(const char *str, size_t *pos)
 {
-    char *tmp = calloc(1, 1);
+    int tmp_size = 10, len = 0;
+    char *tmp = calloc(tmp_size, 1);
     while (SYM_OR_NUM(str, *pos) && str[*pos]) {
-        tmp = realloc(tmp, strlen(tmp) + 2); /* + 2, 1 for character, 1 for null term */
-        tmp[strlen(tmp)] = str[(*pos)++];
-        tmp[strlen(tmp) + 1] = '\0';
+        tmp[len++] = str[(*pos)++];
+        if ((len + 2) >= tmp_size) {
+            tmp_size *= 2;
+            tmp = realloc(tmp, tmp_size);
+        }
     }
+    tmp[len] = '\0';
+
     bool number = *tmp == '-' || *tmp == '.' || isdigit(*tmp);
     for (size_t i = 1; tmp[i]; ++i) {
         if (tmp[i] == '.') break;
@@ -195,8 +200,10 @@ static Object *obj_read_sym(const char *str, size_t *pos)
     Object *ret;
     if (number)
         ret = obj_read_num(tmp);
-    else if (strcmp(tmp, "true") == 0 || strcmp(tmp, "false") == 0)
-        ret = obj_new_bool(strcmp(tmp, "true") == 0 ? true : false);
+    else if (strcmp(tmp, "true") == 0)
+        ret = obj_new_bool(true);
+    else if (strcmp(tmp, "false") == 0)
+        ret = obj_new_bool(false);
     else
         ret = obj_new_sym(tmp);
     free(tmp);
@@ -205,7 +212,9 @@ static Object *obj_read_sym(const char *str, size_t *pos)
 
 static Object *obj_read_str(char *str, size_t *pos)
 {
-    char *tmp = calloc(1, 1);
+    // char *tmp = calloc(1, 1);
+    int tmp_size = 10, len = 0;
+    char *tmp = calloc(tmp_size, 1);
 
     ++*pos; /* skip opening quote */
 
@@ -224,9 +233,12 @@ static Object *obj_read_str(char *str, size_t *pos)
                 return obj_new_err("unknown escape sequence '\\%c'", str[*pos]);
             }
         }
-        tmp = realloc(tmp, strlen(tmp) + 2);
-        tmp[strlen(tmp)] = c;
-        tmp[strlen(tmp) + 1] = '\0';
+        tmp[len++] = c;
+        if ((len + 2) >= tmp_size) {
+            tmp_size *= 2;
+            tmp = realloc(tmp, tmp_size);
+        }
+        tmp[len] = '\0';
         ++*pos;
     }
 
