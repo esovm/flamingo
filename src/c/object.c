@@ -48,7 +48,7 @@ Object *obj_new_num(double n)
 Object *obj_new_err(const char *fmt, ...)
 {
     Object *ret = malloc(sizeof(Object));
-    const size_t amt = 256;
+    const int amt = 256;
     va_list ap;
 
     va_start(ap, fmt);
@@ -131,7 +131,7 @@ Object *obj_attach(Object *obj, Object *obj2)
     return obj;
 }
 
-Object *obj_pop(Object *obj, size_t idx)
+Object *obj_pop(Object *obj, int idx)
 {
     Object *elem = obj->cell[idx];
     memmove(&obj->cell[idx], &obj->cell[idx + 1], sizeof(Object *) * (obj->nelem - idx - 1));
@@ -139,7 +139,7 @@ Object *obj_pop(Object *obj, size_t idx)
     return elem;
 }
 
-Object *obj_take(Object *obj, size_t idx)
+Object *obj_take(Object *obj, int idx)
 {
     Object *elem = obj_pop(obj, idx);
     obj_free(obj);
@@ -149,7 +149,6 @@ Object *obj_take(Object *obj, size_t idx)
 Object *obj_cp(Object *obj)
 {
     Object *ret = malloc(sizeof(Object));
-
     ret->type = obj->type;
 
     switch (ret->type) {
@@ -172,7 +171,7 @@ Object *obj_cp(Object *obj)
     case O_BEXPR:
         ret->nelem = obj->nelem;
         ret->cell = malloc(ret->nelem * sizeof(Object *));
-        for (size_t i = 0; i < ret->nelem; ++i)
+        for (int i = 0; i < ret->nelem; ++i)
             ret->cell[i] = obj_cp(obj->cell[i]);
         break;
     }
@@ -185,7 +184,7 @@ Object *obj_call(Env *env, Object *func, Object *list)
     if (func->r.f.builtin)
         return func->r.f.builtin(env, list);
 
-    size_t given = list->nelem, total = func->r.f.params->nelem;
+    int given = list->nelem, total = func->r.f.params->nelem;
 
     while (list->nelem) {
         if (!func->r.f.params->nelem) {
@@ -252,7 +251,7 @@ bool obj_equal(Object *a, Object *b)
     case O_SEXPR:
     case O_BEXPR:
         if (a->nelem != b->nelem) return false;
-        for (size_t i = 0; i < a->nelem; ++i)
+        for (int i = 0; i < a->nelem; ++i)
             if (!obj_equal(a->cell[i], b->cell[i])) return false;
         return true;
     }
@@ -286,7 +285,7 @@ static Object *obj_eval_sexpr(Env *env, Object *obj)
     Object *first;
     int error_id = -1;
 
-    for (size_t i = 0; i < obj->nelem; ++i) {
+    for (int i = 0; i < obj->nelem; ++i) {
         obj->cell[i] = obj_eval(env, obj->cell[i]);
         if (obj->cell[i]->type == O_ERROR)
             error_id = i;
@@ -321,19 +320,17 @@ Object *obj_eval(Env *env, Object *obj)
 void obj_dump_expr(Object *obj, char open, char close)
 {
     putchar(open);
-
-    for (size_t i = 0; i < obj->nelem; ++i) {
+    for (int i = 0; i < obj->nelem; ++i) {
         obj_dump(obj->cell[i]);
         if (i != obj->nelem - 1) putchar(' ');
     }
-
     putchar(close);
 }
 
 void obj_dump_str(Object *obj)
 {
     char c;
-    for (size_t i = 0; (c = obj->r.string[i]); ++i)
+    for (int i = 0; (c = obj->r.string[i]); ++i)
         strchr(escape_chars, c) ? fputs(escape(c), stdout) : putchar(c);
 }
 
@@ -376,7 +373,7 @@ void obj_free(Object *obj)
         break;
     case O_SEXPR:
     case O_BEXPR:
-        for (size_t i = 0; i < obj->nelem; ++i)
+        for (int i = 0; i < obj->nelem; ++i)
             obj_free(obj->cell[i]);
         free(obj->cell);
         break;

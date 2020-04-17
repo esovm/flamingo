@@ -1,5 +1,5 @@
-#ifndef MAP_H
-#define MAP_H
+#ifndef FLAMINGO_MAP_H
+#define FLAMINGO_MAP_H
 
 #include <string.h>
 
@@ -7,15 +7,15 @@ typedef struct MapNode MapNode;
 
 typedef struct {
     MapNode **buckets;
-    unsigned nbuckets, nnodes;
+    unsigned int nbuckets, nnodes;
 } MapBase;
 
 typedef struct {
-    unsigned bucketidx;
+    unsigned int bucketidx;
     MapNode *node;
 } MapIter;
 
-#define map_t(T)      \
+#define map_type(T)   \
     struct {          \
         MapBase base; \
         T *ref;       \
@@ -23,14 +23,12 @@ typedef struct {
     }
 
 #define map_init(m) memset(m, 0, sizeof(*(m)))
-
 #define map_free(m) map_free_(&(m)->base)
-
 #define map_get(m, key) ((m)->ref = map_get_(&(m)->base, key))
 
 #define map_set(m, key, value) \
     ((m)->tmp = (value),       \
-    map_set_(&(m)->base, key, &(m)->tmp, sizeof((m)->tmp)))
+     map_set_(&(m)->base, key, &(m)->tmp, sizeof((m)->tmp)))
 
 #define map_remove(m, key) \
     map_remove_(&(m)->base, key)
@@ -47,11 +45,11 @@ int map_set_(MapBase *m, const char *key, void *value, int vsize);
 void map_remove_(MapBase *m, const char *key);
 MapIter map_iter_(void);
 const char *map_next_(MapBase *m, MapIter *iter);
-typedef map_t(void *) map_void_t;
-typedef map_t(char *) map_str_t;
-typedef map_t(int) map_int_t;
-typedef map_t(char) map_char_t;
-typedef map_t(float) map_float_t;
-typedef map_t(double) map_double_t;
+typedef map_type(void *) map_void_t;
+typedef map_type(char *) map_str_t;
+typedef map_type(int) map_int_t;
+typedef map_type(char) map_char_t;
+typedef map_type(float) map_float_t;
+typedef map_type(double) map_double_t;
 
-#endif /* MAP_H */
+#endif /* FLAMINGO_MAP_H */

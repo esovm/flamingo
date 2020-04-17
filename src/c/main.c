@@ -22,7 +22,7 @@ int main(int argc, char **argv)
                 free(line);
                 continue;
             }
-            size_t pos = 0;
+            int pos = 0;
             Object *obj = obj_eval(env, obj_read_expr(line, &pos, '\0'));
             OBJ_DUMP_LN(obj);
             obj_free(obj);

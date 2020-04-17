@@ -1,7 +1,6 @@
 #ifndef FLAMINGO_OBJECT_H
 #define FLAMINGO_OBJECT_H
 
-#include <stddef.h>
 #include <stdbool.h>
 
 #define OBJ_ENSURE(OBJ, CONDITION, ERROR_STR)   \
@@ -74,13 +73,13 @@ struct Object {
         } f; /* user-defined or built-in function */
     } r; /* result */
     /* s-expression */
-    size_t nelem;
+    int nelem;
     struct Object **cell;
 };
 
 Object *obj_new_bool(bool);
 Object *obj_new_num(double);
-Object *obj_new_err(const char *fmt, ...);
+Object *obj_new_err(const char *, ...);
 Object *obj_new_sym(const char *);
 Object *obj_new_str(const char *);
 Object *obj_new_func(BuiltinFn);
@@ -88,7 +87,7 @@ Object *obj_new_lambda(Object *, Object *);
 Object *obj_new_sexpr(void);
 Object *obj_new_bexpr(void);
 
-Object *obj_read_expr(char *, size_t *, char);
+Object *obj_read_expr(char *, int *, char);
 Object *obj_eval(Env *, Object *);
 void obj_dump(Object *);
 void obj_free(Object *);
@@ -96,8 +95,8 @@ void obj_free(Object *);
 Object *obj_attach(Object *, Object *);
 Object *obj_append(Object *, Object *);
 Object *obj_cp(Object *);
-Object *obj_take(Object *, size_t);
-Object *obj_pop(Object *, size_t);
+Object *obj_take(Object *, int);
+Object *obj_pop(Object *, int);
 bool obj_equal(Object *, Object *);
 bool obj_is_truthy(Object *);
 Object *obj_to_bool(Object *);

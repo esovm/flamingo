@@ -6,6 +6,8 @@
 #include "env.h"
 #include "util.h"
 
+#define UNUSED(V) ((void)V)
+
 /* bi_ prefixed functions - built-ins */
 
 Object *bi_exit(Env *env, Object *obj)
@@ -19,14 +21,13 @@ Object *bi_exit(Env *env, Object *obj)
 
     obj_free(obj);
     env_free(env);
-
     exit(status);
 }
 
 /* return the first element of a b-expression */
 Object *bi_first(Env *env, Object *obj)
 {
-    (void)env;
+    UNUSED(env);
     NARG("first", obj, 1);
     EXPECT("first", obj, 0, O_BEXPR);
     NOT_EMPTY("first", obj, 0);
@@ -40,7 +41,7 @@ Object *bi_first(Env *env, Object *obj)
 /* return the last element of a b-expression */
 Object *bi_last(Env *env, Object *obj)
 {
-    (void)env;
+    UNUSED(env);
     NARG("last", obj, 1);
     EXPECT("last", obj, 0, O_BEXPR);
     NOT_EMPTY("last", obj, 0);
@@ -54,7 +55,7 @@ Object *bi_last(Env *env, Object *obj)
 /* return a b-expression without its first element */
 Object *bi_rest(Env *env, Object *obj)
 {
-    (void)env;
+    UNUSED(env);
     NARG("rest", obj, 1);
     EXPECT("rest", obj, 0, O_BEXPR);
     NOT_EMPTY("rest", obj, 0);
@@ -66,7 +67,7 @@ Object *bi_rest(Env *env, Object *obj)
 
 Object *bi_list(Env *env, Object *obj)
 {
-    (void)env;
+    UNUSED(env);
     obj->type = O_BEXPR;
     return obj;
 }
@@ -83,8 +84,8 @@ Object *bi_eval(Env *env, Object *obj)
 
 Object *bi_attach(Env *env, Object *obj)
 {
-    (void)env;
-    for (size_t i = 0; i < obj->nelem; ++i)
+    UNUSED(env);
+    for (int i = 0; i < obj->nelem; ++i)
         EXPECT("attach", obj, i, O_BEXPR);
 
     Object *ret = obj_pop(obj, 0);
@@ -98,7 +99,7 @@ Object *bi_attach(Env *env, Object *obj)
 /* return b-expression without the last element */
 Object *bi_init(Env *env, Object *obj)
 {
-    (void)env;
+    UNUSED(env);
     NARG("init", obj, 1);
     EXPECT("init", obj, 0, O_BEXPR);
     NOT_EMPTY("init", obj, 0);
@@ -110,12 +111,12 @@ Object *bi_init(Env *env, Object *obj)
 
 Object *bi_lambda(Env *env, Object *list)
 {
-    (void)env;
+    UNUSED(env);
     NARG("$", list, 2);
     EXPECT("$", list, 0, O_BEXPR);
     EXPECT("$", list, 1, O_BEXPR);
 
-    for (size_t i = 0; i < list->cell[0]->nelem; ++i)
+    for (int i = 0; i < list->cell[0]->nelem; ++i)
         OBJ_ENSURE_F(list, list->cell[0]->cell[i]->type == O_SYMBOL,
             "can only define symbol. (got %s)", obj_type_arr[list->cell[i]->type]);
 
@@ -154,7 +155,7 @@ Object *bi_use(Env *env, Object *obj)
         obj_free(obj);
         return error;
     }
-    size_t pos = 0;
+    int pos = 0;
     Object *expr = obj_read_expr(data, &pos, '\0');
     free(data);
 
@@ -176,8 +177,8 @@ Object *bi_use(Env *env, Object *obj)
 
 Object *bi_puts(Env *env, Object *list)
 {
-    (void)env;
-    for (size_t i = 0; i < list->nelem; ++i) {
+    UNUSED(env);
+    for (int i = 0; i < list->nelem; ++i) {
         obj_dump(list->cell[i]);
         putchar(' ');
     }
@@ -188,7 +189,7 @@ Object *bi_puts(Env *env, Object *list)
 
 Object *bi_err(Env *env, Object *list)
 {
-    (void)env;
+    UNUSED(env);
     NARG("err", list, 1);
     EXPECT("err", list, 0, O_STRING);
 

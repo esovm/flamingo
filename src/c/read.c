@@ -13,7 +13,7 @@
 static const char unescape_chars[] = "abtnvfr\"\'\\";
 
 /* skip whitespace and comments */
-static void skip_whitespace(const char *str, size_t *pos)
+static void skip_whitespace(const char *str, int *pos)
 {
     while ((isspace(str[*pos]) || str[*pos] == '#') && str[*pos]) {
         if (str[*pos] == '#')
@@ -44,7 +44,7 @@ static char unescape(char c)
 Object *read_op(Env *env, Object *list, const char *op)
 {
     (void)env;
-    for (size_t i = 0; i < list->nelem; ++i)
+    for (int i = 0; i < list->nelem; ++i)
         EXPECT(op, list, i, O_NUMBER);
 
     Object *a = obj_pop(list, 0);
@@ -145,14 +145,14 @@ Object *read_var(Env *env, Object *list, const char *func)
     EXPECT(func, list, 0, O_BEXPR);
 
     Object *symbols = list->cell[0];
-    for (size_t i = 0; i < symbols->nelem; ++i)
+    for (int i = 0; i < symbols->nelem; ++i)
         OBJ_ENSURE_F(list, symbols->cell[i]->type == O_SYMBOL, "can only define symbol (got %s)",
             obj_type_arr[symbols->cell[i]->type]);
 
     OBJ_ENSURE_F(list, symbols->nelem == list->nelem - 1,
         "incorrect number of arguments (%d) for %s", list->nelem - 1, func);
 
-    for (size_t i = 0; i < symbols->nelem; ++i) {
+    for (int i = 0; i < symbols->nelem; ++i) {
         if (*func == '=')
             env_set(env, symbols->cell[i], list->cell[i + 1]);
         else if (strcmp("def", func) == 0)
@@ -174,7 +174,7 @@ static Object *obj_read_num(const char *str)
     return obj_new_num(n);
 }
 
-static Object *obj_read_sym(const char *str, size_t *pos)
+static Object *obj_read_sym(const char *str, int *pos)
 {
     int tmp_size = 10, len = 0;
     char *tmp = calloc(tmp_size, 1);
@@ -188,7 +188,7 @@ static Object *obj_read_sym(const char *str, size_t *pos)
     tmp[len] = '\0';
 
     bool number = *tmp == '-' || *tmp == '.' || isdigit(*tmp);
-    for (size_t i = 1; tmp[i]; ++i) {
+    for (int i = 1; tmp[i]; ++i) {
         if (tmp[i] == '.') break;
         if (!isdigit(tmp[i])) {
             number = false;
@@ -210,7 +210,7 @@ static Object *obj_read_sym(const char *str, size_t *pos)
     return ret;
 }
 
-static Object *obj_read_str(char *str, size_t *pos)
+static Object *obj_read_str(char *str, int *pos)
 {
     // char *tmp = calloc(1, 1);
     int tmp_size = 10, len = 0;
@@ -248,9 +248,9 @@ static Object *obj_read_str(char *str, size_t *pos)
     return ret;
 }
 
-static Object *obj_read(char *, size_t *);
+static Object *obj_read(char *, int *);
 
-Object *obj_read_expr(char *str, size_t *pos, char end)
+Object *obj_read_expr(char *str, int *pos, char end)
 {
     Object *a = end == ']' ? obj_new_bexpr() : obj_new_sexpr(), *b;
 
@@ -266,7 +266,7 @@ Object *obj_read_expr(char *str, size_t *pos, char end)
     return a;
 }
 
-Object *obj_read(char *str, size_t *pos)
+Object *obj_read(char *str, int *pos)
 {
     Object *ret;
 

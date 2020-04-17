@@ -4,7 +4,7 @@
 #include "object.h"
 #include "map.h"
 
-typedef map_t(Object) map_object_T;
+typedef map_type(Object) map_object_T;
 
 struct Env {
     map_object_T map;

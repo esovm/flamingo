@@ -4,14 +4,14 @@
 #include "map.h"
 
 struct MapNode {
-    unsigned hash;
+    unsigned int hash;
     void *value;
     MapNode *next;
 };
 
-static unsigned map_hash(const char *str)
+static unsigned int map_hash(const char *str)
 {
-    unsigned hash = 5381;
+    unsigned int hash = 5381;
     while (*str)
         hash = ((hash << 5) + hash) ^ *str++;
     return hash;
@@ -31,7 +31,7 @@ static MapNode *map_newnode(const char *key, void *value, int vsize)
     return node;
 }
 
-static int map_bucketidx(MapBase *m, unsigned hash)
+static int map_bucketidx(MapBase *m, unsigned int hash)
 {
     /* If the implementation is changed to allow a non-power-of-2 bucket count,
     * the line below should be changed to use mod instead of AND */
@@ -82,7 +82,7 @@ static int map_resize(MapBase *m, int nbuckets)
 
 static MapNode **map_getref(MapBase *m, const char *key)
 {
-    unsigned hash = map_hash(key);
+    unsigned int hash = map_hash(key);
     MapNode **next;
     if (m->nbuckets > 0) {
         next = &m->buckets[map_bucketidx(m, hash)];
