@@ -95,14 +95,17 @@
       [unpack match (attach (list x) (rest pairs))]]
 ])
 
-(fn [range-recursive i n lst step] [
-    if (> i (- n 1))
-        [lst]
-        [attach (range-recursive (+ i step) n lst step) (list (i))]
+# return the absolute value of `n`.
+(fn [abs n] [if (< n 0) [- n] [n]])
+
+(fn [range-recursive i n l step] [
+  if (> i (- n 1))
+    [l]
+    [attach (range-recursive (+ i step) n l step) (list i)]
 ])
 
 (fn [range from to step] [
     if (> from to)
-    [range-recursive to from [] (abs step)]
-    [rev (range-recursive from to [] (abs step))]
+      [range-recursive to from [] (abs step)]
+      [rev (range-recursive from to [] (abs step))]
 ])

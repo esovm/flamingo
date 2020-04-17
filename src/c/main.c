@@ -22,8 +22,6 @@ int main(int argc, char **argv)
                 free(line);
                 continue;
             }
-            obj_free(obj_eval(env, bi_use(env, obj_append(obj_new_sexpr(),
-                obj_new_str("/usr/local/include/flamingo/base.fl")))));
             size_t pos = 0;
             Object *obj = obj_eval(env, obj_read_expr(line, &pos, '\0'));
             OBJ_DUMP_LN(obj);
