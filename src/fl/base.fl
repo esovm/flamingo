@@ -67,18 +67,6 @@
     [attach (if (func (st l)) [first l] [null]) (filter func (rest l))]
 ])
 
-(fn [range-recursive i n l] [
-  if (> i n)
-    [l]
-    [attach (range-recursive (+ i 1) n l) (list (- (+ n 1) i))]
-])
-
-(fn [range from to] [
-  if (< from to)
-    [range-recursive from to []]
-    [rev (range-recursive to from [])]
-])
-
 # evaluate expressions in `l` from left to right and return last one.
 (fn [do @ l] [
   if (== l null) [null] [last l]
@@ -105,4 +93,16 @@
     [if (== x (st (st (pairs))))
       [nd (st pairs)]
       [unpack match (attach (list x) (rest pairs))]]
+])
+
+(fn [range-recursive i n lst step] [
+    if (> i (- n 1))
+        [lst]
+        [attach (range-recursive (+ i step) n lst step) (list (i))]
+])
+
+(fn [range from to step] [
+    if (> from to)
+    [range-recursive to from [] (abs step)]
+    [rev (range-recursive from to [] (abs step))]
 ])

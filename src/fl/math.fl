@@ -22,3 +22,6 @@
 
 # return the sum of `l`'s elements.
 (fn [sum l] [unpack + l])
+
+# return the absolute value of `n`.
+(fn [abs n] [if (< n 0) [- n] [n]])
