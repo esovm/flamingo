@@ -143,18 +143,17 @@ Object *bi_if(Env *env, Object *list)
     return ret;
 }
 
-Object *bi_use(Env *env, Object *list)
+Object *bi_use(Env *env, Object *obj)
 {
-    NARG("use", list, 1);
-    EXPECT("use", list, 0, O_STRING);
+    NARG("use", obj, 1);
+    EXPECT("use", obj, 0, O_STRING);
 
-    char *data = readfile(list->cell[0]->r.string);
+    char *data = readfile(obj->cell[0]->r.string);
     if (!data) {
-        Object *error = obj_new_err("Cannot use file \"%s\"", list->cell[0]->r.string);
-        obj_free(list);
+        Object *error = obj_new_err("Cannot use file \"%s\"", obj->cell[0]->r.string);
+        obj_free(obj);
         return error;
     }
-
     size_t pos = 0;
     Object *expr = obj_read_expr(data, &pos, '\0');
     free(data);
@@ -171,8 +170,7 @@ Object *bi_use(Env *env, Object *list)
     }
 
     obj_free(expr);
-    obj_free(list);
-
+    obj_free(obj);
     return obj_new_sexpr();
 }
 

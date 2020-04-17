@@ -6,7 +6,7 @@
 #include "object.h"
 #include "env.h"
 
-#define FLAMINGO_VERSION "0.2.1"
+#define FLAMINGO_VERSION "0.3.0"
 
 int main(int argc, char **argv)
 {
@@ -14,20 +14,20 @@ int main(int argc, char **argv)
     env_register_all(env);
 
     if (argc == 1) {
-        char *line;
         printf("Flamingo %s\ntype \"exit <status>\" to terminate\n", FLAMINGO_VERSION);
-
+        char *line;
         while ((line = readline("=> "))) {
+            /* ignore comments and empty/whitespace-only strings */
             if (!*line || !*trim(line) || *trim(line) == '#') {
-                /* ignore comments and empty/whitespace-only strings */
                 free(line);
                 continue;
             }
+            obj_free(obj_eval(env, bi_use(env, obj_append(obj_new_sexpr(),
+                obj_new_str("/usr/local/include/flamingo/base.fl")))));
             size_t pos = 0;
-            Object *e = obj_read_expr(line, &pos, '\0'), *obj = obj_eval(env, e);
+            Object *obj = obj_eval(env, obj_read_expr(line, &pos, '\0'));
             OBJ_DUMP_LN(obj);
             obj_free(obj);
-
             add_history(line);
             free(line);
         }
@@ -40,8 +40,6 @@ int main(int argc, char **argv)
             obj_free(r);
         }
     }
-
     env_free(env);
-
     return 0;
 }
