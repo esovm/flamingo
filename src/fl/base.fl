@@ -77,10 +77,8 @@
   ($ [_] b) ()
 )])
 
-# Let and do combined
-(fn [open params] [let
-  [unpack do params]
-])
+# `let` and `do` combined.
+(fn [open params] [let [unpack do params]])
 
 # when-else function.
 (fn [when @ pairs] [
@@ -112,7 +110,7 @@
 
 # range from to with step
 (fn [range from to step] [
-    if (> from to)
-      [range-recursive (+ to 1) (+ from 1) [] (abs step)]
-      [rev (range-recursive from to [] (abs step))]
+  if (> from to)
+    [range-recursive (+ to 1) (+ from 1) [] (abs step)]
+    [rev (range-recursive from to [] (abs step))]
 ])

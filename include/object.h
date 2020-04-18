@@ -120,7 +120,7 @@ Object *bi_if(Env *, Object *);
 Object *bi_use(Env *, Object *);
 Object *bi_puts(Env *, Object *);
 Object *bi_err(Env *, Object *);
-Object *bi_while(Env *env, Object *list);
+Object *bi_while(Env *, Object *);
 
 static inline Object *bi_add(Env *env, Object *obj) {
     return read_op(env, obj, "+");
