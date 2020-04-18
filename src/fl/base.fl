@@ -46,10 +46,10 @@
 ])
 
 # return the `n`-th element of list `l`.
-(fn [nth n l] [
+(fn [at n l] [
   if (not n)
     [st l]
-    [nth (- n 1) (rest l)]
+    [at (- n 1) (rest l)]
 ])
 
 # apply function `func` on each element of list `l`.
@@ -69,7 +69,15 @@
 
 # evaluate expressions in `l` from left to right and return last one.
 (fn [do @ l] [
-  if (== l null) [null] [last l]
+  if (== l null) [null] [eval (last l)]
+])
+
+# Let and do combined
+(fn [open params] [let
+    [do
+      (unpack do params)
+      (eval (last params))
+    ]
 ])
 
 # create a new, more local scope.
@@ -98,14 +106,16 @@
 # return the absolute value of `n`.
 (fn [abs n] [if (< n 0) [- n] [n]])
 
+# range recursive function (use range function instead)
 (fn [range-recursive i n l step] [
   if (> i (- n 1))
     [l]
     [attach (range-recursive (+ i step) n l step) (list i)]
 ])
 
+# range from to with step
 (fn [range from to step] [
     if (> from to)
-      [range-recursive to from [] (abs step)]
+      [range-recursive (+ to 1) (+ from 1) [] (abs step)]
       [rev (range-recursive from to [] (abs step))]
 ])
