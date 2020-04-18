@@ -70,10 +70,7 @@ Good example would structure "if", in this case "No" never gets printed and the 
 (if [== 1 1] [puts 'Yes'] [puts 'No'])
 ```
 
-Thus B-e
-
-With the nature of a B-expression, you can make lots of interesting things, from arrays to dictonary-like structures:
-
+With the nature of a B-expression, you can make lots of interesting things, from arrays to dictionary-like structures:
 
 ```lisp
 (first [11 22 33 44 55 66 77]) # 11
@@ -94,7 +91,6 @@ To evaluate a B-expression, simply call the built-in `eval` function:
 ---
 
 **Lets look at some built-in and base functions as well as some essential structures!**
-
 ---
 `fn` - a helper function for defining functions
 
@@ -107,6 +103,24 @@ This function uses the built-in lambda (see `$`), and is defined in the base lib
 ```
 
 As we can see, it creates a global variable (see `def` section), whose value is a lambda function. Then, it uses the `first` argument as the function name, and the `rest` of the arguments as the arguments of the actual function.
+
+---
+`use` - import a file into another and evaluate its contents
+
+Let's say we have a file named `add2.fl` with the following function definition:
+```lisp
+# add2.fl
+(fn [add2 x] [+ x 2])
+```
+We also have another file, `add4.fl` which wants to use the `add2` function. How do we import it? with the built-in `use` function!:
+
+```lisp
+# add4.fl
+
+(use 'add2.fl')
+
+(fn [add4 x] [ add2 (add2 x) ])
+```
 
 ---
 
