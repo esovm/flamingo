@@ -32,6 +32,7 @@ static char *escape(char c)
 Object *obj_new_bool(bool b)
 {
     Object *ret = malloc(sizeof(Object));
+    if (!ret) return NULL;
     ret->type = O_BOOLEAN;
     ret->r.boolean = b;
     return ret;
@@ -40,6 +41,7 @@ Object *obj_new_bool(bool b)
 Object *obj_new_num(double n)
 {
     Object *ret = malloc(sizeof(Object));
+    if (!ret) return NULL;
     ret->type = O_NUMBER;
     ret->r.number = n;
     return ret;
@@ -50,6 +52,7 @@ Object *obj_new_err(const char *fmt, ...)
     Object *ret = malloc(sizeof(Object));
     const int amt = 256;
     va_list ap;
+    if (!ret) return NULL;
 
     va_start(ap, fmt);
 
@@ -66,6 +69,7 @@ Object *obj_new_err(const char *fmt, ...)
 Object *obj_new_sym(const char *s)
 {
     Object *ret = malloc(sizeof(Object));
+    if (!ret) return NULL;
     ret->type = O_SYMBOL;
     ret->r.symbol = dupstr(s);
     return ret;
@@ -74,6 +78,7 @@ Object *obj_new_sym(const char *s)
 Object *obj_new_str(const char *s)
 {
     Object *ret = malloc(sizeof(Object));
+    if (!ret) return NULL;
     ret->type = O_STRING;
     ret->r.string = dupstr(s);
     return ret;
@@ -82,6 +87,7 @@ Object *obj_new_str(const char *s)
 Object *obj_new_func(BuiltinFn func)
 {
     Object *ret = malloc(sizeof(Object));
+    if (!ret) return NULL;
     ret->type = O_FUNC;
     ret->r.f.builtin = func;
     return ret;
@@ -90,6 +96,7 @@ Object *obj_new_func(BuiltinFn func)
 Object *obj_new_lambda(Object *params, Object *body)
 {
     Object *ret = malloc(sizeof(Object));
+    if (!ret) return NULL;
     ret->type = O_FUNC;
     ret->r.f.builtin = NULL;
     ret->r.f.params = params;
@@ -101,6 +108,7 @@ Object *obj_new_lambda(Object *params, Object *body)
 Object *obj_new_sexpr(void)
 {
     Object *ret = malloc(sizeof(Object));
+    if (!ret) return NULL;
     ret->type = O_SEXPR;
     ret->nelem = 0;
     ret->cell = NULL;
@@ -110,6 +118,7 @@ Object *obj_new_sexpr(void)
 Object *obj_new_bexpr(void)
 {
     Object *ret = malloc(sizeof(Object));
+    if (!ret) return NULL;
     ret->type = O_BEXPR;
     ret->nelem = 0;
     ret->cell = NULL;
@@ -149,6 +158,7 @@ Object *obj_take(Object *obj, int idx)
 Object *obj_cp(Object *obj)
 {
     Object *ret = malloc(sizeof(Object));
+    if (!ret) return NULL;
     ret->type = obj->type;
 
     switch (ret->type) {
@@ -170,7 +180,7 @@ Object *obj_cp(Object *obj)
     case O_SEXPR:
     case O_BEXPR:
         ret->nelem = obj->nelem;
-        ret->cell = malloc(ret->nelem * sizeof(Object *));
+        if (!(ret->cell = malloc(ret->nelem * sizeof(Object *)))) return NULL;
         for (int i = 0; i < ret->nelem; ++i)
             ret->cell[i] = obj_cp(obj->cell[i]);
         break;

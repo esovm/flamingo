@@ -110,6 +110,8 @@ void env_register_all(Env *env)
     env_register(env, "use", bi_use);
     env_register(env, "puts", bi_puts);
     env_register(env, "err", bi_err);
+    env_register(env, "while", bi_while);
+    
 }
 
 void env_free(Env *env)

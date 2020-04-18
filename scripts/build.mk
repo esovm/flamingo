@@ -5,7 +5,7 @@ ifeq ($(MODE), debug)
 	CFLAGS += -O0 -g
 	BUILDDIR := build/debug
 else
-	CFLAGS += -O3 -flto -Wno-unused-parameter
+	CFLAGS += -O2 -flto -Wno-unused-parameter
 	BUILDDIR := build/release
 endif
 

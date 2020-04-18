@@ -96,7 +96,7 @@ Object *read_rel(Env *env, Object *list, const char *op)
         EXPECT(op, list, 1, O_NUMBER);
     }
 
-    bool r;
+    bool r = 0;
     switch (*op) {
     case '<':
         r = op[1] == '='
@@ -222,7 +222,7 @@ static Object *obj_read_str(char *str, int *pos)
         char c = str[*pos];
         if (!c) {
             free(tmp);
-            return obj_new_err("string literal is missing a closing quote");
+            return obj_new_err("string literal is missing an opening/closing quote");
         }
         if (c == '\\') {
             ++*pos; /* advance to character after backslash */

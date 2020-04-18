@@ -29,9 +29,10 @@
     OBJ_ENSURE_F(OBJ, OBJ->nelem == N, "%s expected %d argument%s but got %d", \
                  ID, N, N != 1 ? "s" : "", OBJ->nelem);
 
-#define NOT_EMPTY(ID, OBJ, I)                                                                 \
-    OBJ_ENSURE_F(OBJ, obj->cell[I]->nelem,                                                    \
-                 "%s cannot operate on empty b-expression ('[]'). (argument %lu)", ID, I + 1);
+#define BEXPR_NOT_EMPTY(ID, OBJ, I) \
+    OBJ_ENSURE_F(OBJ, OBJ->cell[I]->nelem, "%s cannot operate on empty b-expression ([]).", ID);
+#define STRING_NOT_EMPTY(ID, OBJ, I) \
+    OBJ_ENSURE_F(OBJ, *(OBJ->cell[I]->r.string), "%s cannot operate on empty string ('').", ID);
 
 #define OBJ_DUMP_LN(OBJ)   \
     do {                   \
@@ -119,6 +120,7 @@ Object *bi_if(Env *, Object *);
 Object *bi_use(Env *, Object *);
 Object *bi_puts(Env *, Object *);
 Object *bi_err(Env *, Object *);
+Object *bi_while(Env *env, Object *list);
 
 static inline Object *bi_add(Env *env, Object *obj) {
     return read_op(env, obj, "+");

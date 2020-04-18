@@ -12,44 +12,59 @@
 
 Object *bi_exit(Env *env, Object *obj)
 {
-    int status;
-
     NARG("exit", obj, 1);
     EXPECT("exit", obj, 0, O_NUMBER);
 
-    status = obj->cell[0]->r.number;
-
+    int status = obj->cell[0]->r.number;
     obj_free(obj);
     env_free(env);
     exit(status);
 }
 
-/* return the first element of a b-expression */
+/* return the first element of a b-expression, or the first character of a string */
 Object *bi_first(Env *env, Object *obj)
 {
     UNUSED(env);
     NARG("first", obj, 1);
-    EXPECT("first", obj, 0, O_BEXPR);
-    NOT_EMPTY("first", obj, 0);
 
-    Object *first = obj_take(obj, 0);
-    while (first->nelem > 1)
-        obj_free(obj_pop(first, 1));
-    return first;
+    if (obj->cell[0]->type == O_BEXPR) {
+        BEXPR_NOT_EMPTY("first", obj, 0);
+        Object *first = obj_take(obj, 0);
+        while (first->nelem > 1)
+            obj_free(obj_pop(first, 1));
+        return first;
+    } else if (obj->cell[0]->type == O_STRING) {
+        STRING_NOT_EMPTY("first", obj, 0);
+        char first = *obj->cell[0]->r.string;
+        obj_free(obj);
+        return obj_new_str(&first);
+    }
+    const char *got = obj_type_arr[obj->cell[0]->type];
+    obj_free(obj);
+    return obj_new_err("first expected a b-expression or a string but got %s", got);
 }
 
-/* return the last element of a b-expression */
+/* return the last element of a b-expression, or the last character of a string */
 Object *bi_last(Env *env, Object *obj)
 {
     UNUSED(env);
     NARG("last", obj, 1);
-    EXPECT("last", obj, 0, O_BEXPR);
-    NOT_EMPTY("last", obj, 0);
 
-    Object *last = obj_take(obj, obj->nelem - 1);
-    while (last->nelem > 1)
-        obj_free(obj_pop(last, 0));
-    return last;
+    if (obj->cell[0]->type == O_BEXPR) {
+        BEXPR_NOT_EMPTY("last", obj, 0);
+        Object *last = obj_take(obj, obj->nelem - 1);
+        while (last->nelem > 1)
+            obj_free(obj_pop(last, 0));
+        return last;
+    } else if (obj->cell[0]->type == O_STRING) {
+        STRING_NOT_EMPTY("last", obj, 0);
+        char last = obj->cell[0]->r.string[strlen(obj->cell[0]->r.string) - 1];
+        obj_free(obj);
+        return obj_new_str(&last);
+    }
+    const char *got = obj_type_arr[obj->cell[0]->type];
+    obj_free(obj);
+    return obj_new_err("last expected a b-expression or a string but got %s", got);
 }
 
 /* return a b-expression without its first element */
@@ -57,12 +72,25 @@ Object *bi_rest(Env *env, Object *obj)
 {
     UNUSED(env);
     NARG("rest", obj, 1);
-    EXPECT("rest", obj, 0, O_BEXPR);
-    NOT_EMPTY("rest", obj, 0);
 
-    Object *first = obj_take(obj, 0);
-    obj_free(obj_pop(first, 0));
-    return first;
+    if (obj->cell[0]->type == O_BEXPR) {
+        BEXPR_NOT_EMPTY("rest", obj, 0);
+        Object *first = obj_take(obj, 0);
+        obj_free(obj_pop(first, 0));
+        return first;
+    } else if (obj->cell[0]->type == O_STRING) {
+        STRING_NOT_EMPTY("rest", obj, 0);
+        size_t len = strlen(obj->cell[0]->r.string);
+        char cp[len];
+        for (int i = 0; obj->cell[0]->r.string[i]; ++i)
+            cp[i] = obj->cell[0]->r.string[i];
+        memmove(cp, cp + 1, len);
+        obj_free(obj);
+        return obj_new_str(cp);
+    }
+    const char *got = obj_type_arr[obj->cell[0]->type];
+    obj_free(obj);
+    return obj_new_err("rest expected a b-expression or a string but got %s", got);
 }
 
 Object *bi_list(Env *env, Object *obj)
@@ -86,7 +114,7 @@ Object *bi_attach(Env *env, Object *obj)
 {
     UNUSED(env);
     for (int i = 0; i < obj->nelem; ++i)
-        EXPECT("attach", obj, i, O_BEXPR);
+            EXPECT("attach", obj, i, O_BEXPR);
 
     Object *ret = obj_pop(obj, 0);
     while (obj->nelem)
@@ -102,7 +130,7 @@ Object *bi_init(Env *env, Object *obj)
     UNUSED(env);
     NARG("init", obj, 1);
     EXPECT("init", obj, 0, O_BEXPR);
-    NOT_EMPTY("init", obj, 0);
+    BEXPR_NOT_EMPTY("init", obj, 0);
 
     Object *first = obj_take(obj, 0);
     obj_free(obj_pop(first, first->nelem - 1));
@@ -196,4 +224,27 @@ Object *bi_err(Env *env, Object *list)
     Object *ret = obj_new_err(list->cell[0]->r.string);
     obj_free(list);
     return ret;
+}
+
+// NOT GOOD: Evaluating expression frees it, having to use obj_cp which uses malloc every iteration, which is slow
+Object *bi_while(Env *env, Object *list)
+{
+    NARG("while", list, 2);
+    EXPECT("while", list, 0, O_BEXPR);
+    EXPECT("while", list, 1, O_BEXPR);
+
+    list->cell[0]->type = list->cell[1]->type = O_SEXPR;
+
+    Object *cond = obj_eval(env, obj_cp(list->cell[0]));
+
+    while (obj_is_truthy(cond)) {
+        obj_free(obj_eval(env, obj_cp(list->cell[1])));
+        obj_free(cond);
+        cond = obj_eval(env, obj_cp(list->cell[0]));
+    }
+
+    obj_free(cond);
+
+    obj_free(list);
+    return obj_new_sexpr();
 }
