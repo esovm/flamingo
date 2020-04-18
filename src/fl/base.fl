@@ -45,11 +45,11 @@
     [def [l] (attach (rev (rest l)) (first l))]
 ])
 
-# return the `n`-th element of list `l`.
-(fn [nth n l] [
-  if (not n)
+# return the element at index `n` of list `l`.
+(fn [at i l] [
+  if (not i)
     [st l]
-    [nth (- n 1) (rest l)]
+    [at (- i 1) (rest l)]
 ])
 
 # apply function `func` on each element of list `l`.
