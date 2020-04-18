@@ -6,7 +6,7 @@
 #include "object.h"
 #include "env.h"
 
-#define FLAMINGO_VERSION "0.3.0"
+#define FLAMINGO_VERSION "0.4.0"
 
 int main(int argc, char **argv)
 {

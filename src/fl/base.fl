@@ -69,13 +69,18 @@
 
 # evaluate expressions in `l` from left to right and return last one.
 (fn [do @ l] [
-  if (== l null) [null] [last l]
+  if (== l null) [null] [eval (last l)]
 ])
 
 # create a new, more local scope.
 (fn [let b] [(
   ($ [_] b) ()
 )])
+
+# Let and do combined
+(fn [open params] [let
+  [unpack do params]
+])
 
 # when-else function.
 (fn [when @ pairs] [
@@ -98,14 +103,16 @@
 # return the absolute value of `n`.
 (fn [abs n] [if (< n 0) [- n] [n]])
 
+# range recursive function (use range function instead)
 (fn [range-recursive i n l step] [
   if (> i (- n 1))
     [l]
     [attach (range-recursive (+ i step) n l step) (list i)]
 ])
 
+# range from to with step
 (fn [range from to step] [
     if (> from to)
-      [range-recursive to from [] (abs step)]
+      [range-recursive (+ to 1) (+ from 1) [] (abs step)]
       [rev (range-recursive from to [] (abs step))]
 ])

@@ -225,3 +225,25 @@ Object *bi_err(Env *env, Object *list)
     obj_free(list);
     return ret;
 }
+
+/* NOT GOOD: Evaluating expression frees it, having to use obj_cp which uses malloc every iteration, which is slow */
+Object *bi_while(Env *env, Object *list)
+{
+    NARG("while", list, 2);
+    EXPECT("while", list, 0, O_BEXPR);
+    EXPECT("while", list, 1, O_BEXPR);
+
+    list->cell[0]->type = list->cell[1]->type = O_SEXPR;
+
+    Object *cond = obj_eval(env, obj_cp(list->cell[0]));
+
+    while (obj_is_truthy(cond)) {
+        obj_free(obj_eval(env, obj_cp(list->cell[1])));
+        obj_free(cond);
+        cond = obj_eval(env, obj_cp(list->cell[0]));
+    }
+
+    obj_free(cond);
+    obj_free(list);
+    return obj_new_sexpr();
+}
