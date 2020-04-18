@@ -1,0 +1,14 @@
+1 million iterations:
+---------------------
+
+python 3.8.2: 2.62, 2.59, 2.59
+avg: 2.60 seconds
+
+ruby 2.7.0: 2.80, 2.69, 2.68
+avg: 2.72 seconds
+
+node.js 12.16.1: 7.05, 7.02, 6.98
+avg: 7.01 seconds
+
+flamingo 0.4.0: 7.17, 7.24, 7.45
+avg: 7.28 seconds

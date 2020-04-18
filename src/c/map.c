@@ -17,30 +17,29 @@ static unsigned int map_hash(const char *str)
     return hash;
 }
 
-static MapNode *map_newnode(const char *key, void *value, int vsize)
+static MapNode *map_newnode(const char *key, void *value, int value_size)
 {
-    MapNode *node;
-    int ksize = strlen(key) + 1;
-    int voffset = ksize + ((sizeof(void *) - ksize) % sizeof(void *));
-    node = malloc(sizeof(*node) + voffset + vsize);
+    int key_size = strlen(key) + 1;
+    int value_offset = key_size + ((sizeof(void *) - key_size) % sizeof(void *));
+    MapNode *node = malloc(sizeof(*node) + value_offset + value_size);
     if (!node) return NULL;
-    memcpy(node + 1, key, ksize);
+    memcpy(node + 1, key, key_size);
     node->hash = map_hash(key);
-    node->value = ((char *)(node + 1)) + voffset;
-    memcpy(node->value, value, vsize);
+    node->value = ((char *)(node + 1)) + value_offset;
+    memcpy(node->value, value, value_size);
     return node;
 }
 
-static int map_bucketidx(MapBase *m, unsigned int hash)
+static int map_bucket_index(MapBase *m, unsigned int hash)
 {
-    /* If the implementation is changed to allow a non-power-of-2 bucket count,
+    /* if the implementation is changed to allow a non-power-of-2 bucket count,
     * the line below should be changed to use mod instead of AND */
     return hash & (m->nbuckets - 1);
 }
 
 static void map_addnode(MapBase *m, MapNode *node)
 {
-    int n = map_bucketidx(m, node->hash);
+    int n = map_bucket_index(m, node->hash);
     node->next = m->buckets[n];
     m->buckets[n] = node;
 }
@@ -77,7 +76,7 @@ static int map_resize(MapBase *m, int nbuckets)
         }
     }
     /* Return error code if realloc() failed */
-    return buckets == NULL ? -1 : 0;
+    return !buckets ? -1 : 0;
 }
 
 static MapNode **map_getref(MapBase *m, const char *key)
@@ -85,7 +84,7 @@ static MapNode **map_getref(MapBase *m, const char *key)
     unsigned int hash = map_hash(key);
     MapNode **next;
     if (m->nbuckets > 0) {
-        next = &m->buckets[map_bucketidx(m, hash)];
+        next = &m->buckets[map_bucket_index(m, hash)];
         while (*next) {
             if ((*next)->hash == hash && strcmp((char *)(*next + 1), key) == 0)
                 return next;
@@ -116,17 +115,17 @@ void *map_get_(MapBase *m, const char *key)
     return next ? (*next)->value : NULL;
 }
 
-int map_set_(MapBase *m, const char *key, void *value, int vsize)
+int map_set_(MapBase *m, const char *key, void *value, int value_size)
 {
     int n, err;
     MapNode **next, *node;
     /* Find & replace existing node */
     if ((next = map_getref(m, key))) {
-        memcpy((*next)->value, value, vsize);
+        memcpy((*next)->value, value, value_size);
         return 0;
     }
     /* Add new node */
-    if ((node = map_newnode(key, value, vsize)) == NULL) goto fail;
+    if (!(node = map_newnode(key, value, value_size))) goto fail;
     if (m->nnodes >= m->nbuckets) {
         n = (m->nbuckets > 0) ? (m->nbuckets << 1) : 1;
         err = map_resize(m, n);
@@ -155,7 +154,7 @@ void map_remove_(MapBase *m, const char *key)
 MapIter map_iter_(void)
 {
     MapIter iter;
-    iter.bucketidx = -1;
+    iter.bucket_index = -1;
     iter.node = NULL;
     return iter;
 }
@@ -164,13 +163,13 @@ const char *map_next_(MapBase *m, MapIter *iter)
 {
     if (iter->node) {
         iter->node = iter->node->next;
-        if (iter->node == NULL) goto nextBucket;
+        if (!iter->node) goto nextBucket;
     } else {
     nextBucket:
         do {
-            if (++iter->bucketidx >= m->nbuckets) return NULL;
-            iter->node = m->buckets[iter->bucketidx];
-        } while (iter->node == NULL);
+            if (++iter->bucket_index >= m->nbuckets) return NULL;
+            iter->node = m->buckets[iter->bucket_index];
+        } while (!iter->node);
     }
     return (char *)(iter->node + 1);
 }

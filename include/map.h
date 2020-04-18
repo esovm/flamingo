@@ -11,7 +11,7 @@ typedef struct {
 } MapBase;
 
 typedef struct {
-    unsigned int bucketidx;
+    unsigned int bucket_index;
     MapNode *node;
 } MapIter;
 
@@ -45,11 +45,11 @@ int map_set_(MapBase *m, const char *key, void *value, int vsize);
 void map_remove_(MapBase *m, const char *key);
 MapIter map_iter_(void);
 const char *map_next_(MapBase *m, MapIter *iter);
-typedef map_type(void *) map_void_t;
-typedef map_type(char *) map_str_t;
-typedef map_type(int) map_int_t;
-typedef map_type(char) map_char_t;
-typedef map_type(float) map_float_t;
-typedef map_type(double) map_double_t;
+typedef map_type(void *) map_void_T;
+typedef map_type(char *) map_str_T;
+typedef map_type(int) map_int_T;
+typedef map_type(char) map_char_T;
+typedef map_type(float) map_float_T;
+typedef map_type(double) map_double_T;
 
 #endif /* FLAMINGO_MAP_H */
