@@ -50,19 +50,20 @@ Object *obj_new_num(double n)
 Object *obj_new_err(const char *fmt, ...)
 {
     Object *ret = malloc(sizeof(Object));
+    if (!ret) return NULL;
     const int amt = 256;
     va_list ap;
-    if (!ret) return NULL;
-
     va_start(ap, fmt);
 
     ret->type = O_ERROR;
-    ret->r.error = malloc(amt);
+    if (!(ret->r.error = malloc(amt))) return NULL;
+
     vsnprintf(ret->r.error, amt - 1, fmt, ap);
-    ret->r.error = realloc(ret->r.error, strlen(ret->r.error) + 1);
 
+    char *tmp = realloc(ret->r.error, strlen(ret->r.error) + 1);
+    if (!tmp) return NULL;
+    ret->r.error = tmp;
     va_end(ap);
-
     return ret;
 }
 
@@ -71,7 +72,7 @@ Object *obj_new_sym(const char *s)
     Object *ret = malloc(sizeof(Object));
     if (!ret) return NULL;
     ret->type = O_SYMBOL;
-    ret->r.symbol = dupstr(s);
+    if (!(ret->r.symbol = dupstr(s))) return NULL;
     return ret;
 }
 
@@ -80,7 +81,7 @@ Object *obj_new_str(const char *s)
     Object *ret = malloc(sizeof(Object));
     if (!ret) return NULL;
     ret->type = O_STRING;
-    ret->r.string = dupstr(s);
+    if (!(ret->r.string = dupstr(s))) return NULL;
     return ret;
 }
 
@@ -191,11 +192,9 @@ Object *obj_cp(Object *obj)
 
 Object *obj_call(Env *env, Object *func, Object *list)
 {
-    if (func->r.f.builtin)
-        return func->r.f.builtin(env, list);
+    if (func->r.f.builtin) return func->r.f.builtin(env, list);
 
     int given = list->nelem, total = func->r.f.params->nelem;
-
     while (list->nelem) {
         if (!func->r.f.params->nelem) {
             obj_free(list);
@@ -219,7 +218,6 @@ Object *obj_call(Env *env, Object *func, Object *list)
         obj_free(symbol);
         obj_free(value);
     }
-
     obj_free(list);
 
     if (func->r.f.params->nelem > 0 && *func->r.f.params->cell[0]->r.symbol == '@') {
@@ -235,19 +233,16 @@ Object *obj_call(Env *env, Object *func, Object *list)
         obj_free(symbol);
         obj_free(b);
     }
-
     if (!func->r.f.params->nelem) {
         func->r.f.env->parent = env;
         return bi_eval(func->r.f.env, obj_append(obj_new_sexpr(), obj_cp(func->r.f.body)));
     }
-
     return obj_cp(func);
 }
 
 bool obj_equal(Object *a, Object *b)
 {
     if (a->type != b->type) return false;
-
     switch (a->type) {
     case O_BOOLEAN: return a->r.boolean == b->r.boolean;
     case O_NUMBER: return a->r.number == b->r.number;

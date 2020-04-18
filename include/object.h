@@ -34,10 +34,10 @@
 #define STRING_NOT_EMPTY(ID, OBJ, I) \
     OBJ_ENSURE_F(OBJ, *(OBJ->cell[I]->r.string), "%s cannot operate on empty string ('').", ID);
 
-#define OBJ_DUMP_LN(OBJ)   \
-    do {                   \
-        obj_dump(OBJ);     \
-        putchar('\n');     \
+#define OBJ_DUMP_LN(OBJ) \
+    do {                 \
+        obj_dump(OBJ);   \
+        putchar('\n');   \
     } while (0)
 
 /* these strings have to exactly match the `obj_type` enum elements */

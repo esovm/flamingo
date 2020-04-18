@@ -43,7 +43,7 @@ static char unescape(char c)
 /* math operators */
 Object *read_op(Env *env, Object *list, const char *op)
 {
-    (void)env;
+    UNUSED(env);
     for (int i = 0; i < list->nelem; ++i)
         EXPECT(op, list, i, O_NUMBER);
 
@@ -73,10 +73,8 @@ Object *read_op(Env *env, Object *list, const char *op)
         case '&': a->r.number = (int)a->r.number & (int)b->r.number; break;
         case '|': a->r.number = (int)a->r.number | (int)b->r.number; break;
         }
-
-        if (strcmp(op, "min") == 0) a->r.number = MIN(a->r.number, b->r.number);
-        if (strcmp(op, "max") == 0) a->r.number = MAX(a->r.number, b->r.number);
-
+        if (strcmp(op, "min") == 0) a->r.number = a->r.number < b->r.number ? a->r.number : b->r.number;
+        if (strcmp(op, "max") == 0) a->r.number = a->r.number > b->r.number ? a->r.number : b->r.number;
         obj_free(b);
     }
 
@@ -88,7 +86,7 @@ out:
 /* relational operators */
 Object *read_rel(Env *env, Object *list, const char *op)
 {
-    (void)env;
+    UNUSED(env);
     NARG(op, list, 2);
     if (strcmp(op, "==") && strcmp(op, "!=")) {
         /* operands must be numbers only with <, <=, >, >= */
@@ -121,7 +119,7 @@ Object *read_rel(Env *env, Object *list, const char *op)
 /* logical operators */
 Object *read_log(Env *env, Object *list, const char *op)
 {
-    (void)env;
+    UNUSED(env);
     Object *a = obj_to_bool(obj_pop(list, 0));
 
     if (strcmp(op, "not") == 0 && !list->nelem) a->r.boolean = !a->r.boolean;
@@ -178,6 +176,7 @@ static Object *obj_read_sym(const char *str, int *pos)
 {
     int tmp_size = 10, len = 0;
     char *tmp = calloc(tmp_size, 1);
+    if (!tmp) return NULL;
     while (SYM_OR_NUM(str, *pos) && str[*pos]) {
         tmp[len++] = str[(*pos)++];
         if ((len + 2) >= tmp_size) {
@@ -198,23 +197,24 @@ static Object *obj_read_sym(const char *str, int *pos)
     if (!tmp[1] && (*tmp == '-' || *tmp == '.')) number = false; /* it's just a minus or dot */
 
     Object *ret;
-    if (number)
+    if (number) {
         ret = obj_read_num(tmp);
-    else if (strcmp(tmp, "true") == 0)
+    } else if (strcmp(tmp, "true") == 0) {
         ret = obj_new_bool(true);
-    else if (strcmp(tmp, "false") == 0)
+    } else if (strcmp(tmp, "false") == 0) {
         ret = obj_new_bool(false);
-    else
+    } else {
         ret = obj_new_sym(tmp);
+    }
     free(tmp);
     return ret;
 }
 
 static Object *obj_read_str(char *str, int *pos)
 {
-    // char *tmp = calloc(1, 1);
     int tmp_size = 10, len = 0;
     char *tmp = calloc(tmp_size, 1);
+    if (!tmp) return NULL;
 
     ++*pos; /* skip opening quote */
 

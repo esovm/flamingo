@@ -6,8 +6,6 @@
 #include "env.h"
 #include "util.h"
 
-#define UNUSED(V) ((void)V)
-
 /* bi_ prefixed functions - built-ins */
 
 Object *bi_exit(Env *env, Object *obj)
@@ -227,9 +225,9 @@ Object *bi_err(Env *env, Object *list)
 }
 
 /**
- *  NOT GOOD: Evaluating expression frees it,
+ * NOT GOOD: Evaluating expression frees it,
  * having to use obj_cp which uses malloc every iteration, which is slow
-*/
+ */
 Object *bi_while(Env *env, Object *list)
 {
     NARG("while", list, 2);
