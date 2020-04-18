@@ -96,7 +96,7 @@ Object *read_rel(Env *env, Object *list, const char *op)
         EXPECT(op, list, 1, O_NUMBER);
     }
 
-    bool r = 0;
+    bool r = false;
     switch (*op) {
     case '<':
         r = op[1] == '='
