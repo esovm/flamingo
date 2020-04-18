@@ -226,7 +226,7 @@ Object *bi_err(Env *env, Object *list)
     return ret;
 }
 
-// NOT GOOD: Evaluating expression frees it, having to use obj_cp which uses malloc every iteration, which is slow
+/* NOT GOOD: Evaluating expression frees it, having to use obj_cp which uses malloc every iteration, which is slow */
 Object *bi_while(Env *env, Object *list)
 {
     NARG("while", list, 2);
@@ -244,7 +244,6 @@ Object *bi_while(Env *env, Object *list)
     }
 
     obj_free(cond);
-
     obj_free(list);
     return obj_new_sexpr();
 }
