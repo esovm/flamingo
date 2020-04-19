@@ -167,7 +167,7 @@ static Object *obj_read_num(const char *str)
     errno = 0;
     char *end;
     if (*str == '0' && (str[1] == 'b' || str[1] == 'x')) {
-        long n = strtol(str+2, &end, str[1] == 'b' ? 2 : 16);
+        long n = strtol(str + 2, &end, str[1] == 'b' ? 2 : 16);
         if (errno == ERANGE || *end != '\0')
             return obj_new_err("malformed %s number", str[1] == 'b' ? "binary" : "hexadecimal");
         return obj_new_num(n);
@@ -197,7 +197,7 @@ static Object *obj_read_sym(const char *str, int *pos)
     if (*tmp == '0') {
         if (tmp[1] == 'b') base = 2;
         else if (tmp[1] == 'x') base = 16;
-        if (tmp[2] == '\0') is_num = false;
+        if (!tmp[2]) is_num = false;
     }
 
     for (int i = (base != 10 ? 2 : 1); tmp[i]; ++i) {
