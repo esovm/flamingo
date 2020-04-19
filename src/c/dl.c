@@ -1,6 +1,8 @@
 /* Dynamic (shared) libraries for Flamingo */
 
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "object.h"
 
@@ -44,8 +46,8 @@ NativeType *get_native_type(char *typestr)
 
     /* parse character by character */
     for (int i = 0; i < len; ++i) {
-        if (typestr[i] >= 'A' && typestr[i] <= 'Z' ||
-            typestr[i] >= 'a' && typestr[i] <= 'z' ||
+        if ((typestr[i] >= 'A' && typestr[i] <= 'Z') ||
+            (typestr[i] >= 'a' && typestr[i] <= 'z') ||
             typestr[i] == '*') {
             if (typestr[i] == '*') {
                 ret->is_ptr = true;
