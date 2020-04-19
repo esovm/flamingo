@@ -371,9 +371,11 @@ void obj_dump(Object *obj)
         break;
     case O_SEXPR: obj_dump_expr(obj, '(', ')'); break;
     case O_BEXPR: obj_dump_expr(obj, '[', ']'); break;
+    case O_RAW: fputs("<raw object>", stdout);
     default: break;
     }
 }
+
 
 void obj_free(Object *obj)
 {

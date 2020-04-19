@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "util.h"
+#include "dl.h"
 #include "env.h"
 
 Env *env_new(void)
@@ -111,6 +112,14 @@ void env_register_all(Env *env)
     env_register(env, "use", bi_use);
     env_register(env, "puts", bi_puts);
     env_register(env, "err", bi_err);
+
+    /* dynamic libraries */
+
+    env_register(env, "dl-open", dl_open);
+    env_register(env, "dl-proc", dl_proc);
+    env_register(env, "dl-call", dl_call);
+    env_register(env, "ntype", native_type);
+    env_register(env, "dump-ntype", dump_native_type);
 }
 
 void env_free(Env *env)

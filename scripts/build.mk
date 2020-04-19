@@ -1,5 +1,5 @@
 CFLAGS := -std=c99 -Wall -Wextra -pedantic -Iinclude
-LDLIBS = -ledit -lm
+LDLIBS = -ledit -lm -ldl
 
 ifeq ($(MODE), debug)
 	CFLAGS += -O0 -g

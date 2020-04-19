@@ -1,40 +1,4 @@
-/* Dynamic (shared) libraries for Flamingo */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
-#include "object.h"
-
-#if defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__unix__)
-#include <dlfcn.h>
-#define UNIXLIB
-#define dlproc(hndl, sym_name) dlsym(hndl, sym_name);
-#elif defined(_WIN32)
-#define WINLIB
-#include <windows.h>
-#define dlopen(lib) LoadLibrary(lib)
-#define dlproc(hndl, sym_name) GetProcAddress(hndl, sym_name);
-#endif
-
-typedef enum {
-    NT_INVALID = -1,
-    NT_VOID,
-    NT_CHAR,
-    NT_SHORT,
-    NT_INT,
-    NT_LONG,
-    NT_LLONG,
-    NT_DOUBLE,
-    LEN
-} TypeEnum;
-
-typedef struct {
-    bool is_ptr;
-    TypeEnum type;
-} NativeType;
-
+#include "dl.h"
 
 static const char *str_types[] = { "void", "char", "short", "int", "long", "long long", "double" };
 
@@ -105,11 +69,11 @@ Object *dump_native_type(Env *env, Object *list)
 {
     UNUSED(env);
     NARG("native-dump", list, 1);
-    EXPECT("native-type", list, 0, O_RAW);
+    EXPECT("native-dump", list, 0, O_RAW);
 
     NativeType *nt = obj_pop(list, 0)->r.rawptr;
-
     char res[256];
+
     snprintf(res, sizeof(res), "%s%s", str_types[nt->type], str_types[nt->is_ptr] ? "" : "*");
     return obj_new_str(res);
 }
@@ -123,7 +87,6 @@ Object *native_type(Env *env, Object *list)
     char *typestr = obj_pop(list, 0)->r.string;
 
     NativeType *t = parse_native_type(typestr);
-
     if (!t) return obj_new_err("invalid native type descriptor '%s'", typestr);
 
     return obj_new_raw(t);
@@ -159,19 +122,24 @@ Object *dl_call(Env *env, Object *list)
 {
     NARG("dl-call", list, 4);
     /* proc handle */
+    ArbitraryFn handle_proc;
     EXPECT("dl-call", list, 0, O_RAW);
     EXPECT("dl-call", list, 1, O_RAW);
     EXPECT("dl-call", list, 2, O_BEXPR);
     EXPECT("dl-call", list, 3, O_BEXPR);
+
+    // Assume first of all the arg count is 1, we'll add more later
 
     char type;
     Object *handle = obj_pop(list, 0),
         *return_type = obj_pop(list, 0),
         *param_types = obj_pop(list, 0),
         *param_values = obj_pop(list, 0);
-#ifdef UNIXLIB
 
-    *(void**) (&handle_proc) = handle->r.rawptr;
-    return obj_new_raw(handle_proc());
+    void *param = native_object_by_type(obj_pop(param_types, 0)->r.rawptr, obj_pop(param_values, 0));
+
+#ifdef UNIXLIB
+    *(void**)(&handle_proc) = handle->r.rawptr;
+    return obj_new_raw(handle_proc(param));
 #endif
 }
