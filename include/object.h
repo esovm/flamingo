@@ -40,6 +40,8 @@
         putchar('\n');   \
     } while (0)
 
+#define UNUSED(V) ((void)V)
+
 /* these strings have to exactly match the `obj_type` enum elements */
 extern const char *const obj_type_arr[];
 
@@ -55,17 +57,20 @@ typedef enum {
     O_STRING,
     O_FUNC,
     O_SEXPR,
-    O_BEXPR
+    O_BEXPR,
+    O_RAW
 } obj_type;
 
 struct Object {
     obj_type type;
     union {
         bool boolean;
-        double number;
+        long long integer;
+        double real;
         char *error;
         char *symbol;
         char *string;
+        void *rawptr;
         struct {
             BuiltinFn builtin;
             Env *env;
@@ -73,7 +78,7 @@ struct Object {
             Object *body;
         } f; /* user-defined or built-in function */
     } r; /* result */
-    /* s-expression */
+    /* list */
     int nelem;
     struct Object **cell;
 };
@@ -81,6 +86,7 @@ struct Object {
 Object *obj_new_bool(bool);
 Object *obj_new_num(double);
 Object *obj_new_err(const char *, ...);
+Object *obj_new_raw(void *);
 Object *obj_new_sym(const char *);
 Object *obj_new_str(const char *);
 Object *obj_new_func(BuiltinFn);

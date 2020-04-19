@@ -4,8 +4,6 @@
 #include "object.h"
 #include "map.h"
 
-#define UNUSED(V) ((void)V)
-
 typedef map_type(Object) map_object_T;
 
 struct Env {

@@ -49,32 +49,32 @@ Object *read_op(Env *env, Object *list, const char *op)
 
     Object *a = obj_pop(list, 0);
 
-    if (*op == '-' && !list->nelem) a->r.number *= -1;
-    else if (*op == '~' && !list->nelem) a->r.number = ~(int)a->r.number;
+    if (*op == '-' && !list->nelem) a->r.real *= -1;
+    else if (*op == '~' && !list->nelem) a->r.real = ~(int)a->r.real;
 
     while (list->nelem) {
         Object *b = obj_pop(list, 0);
 
         switch (*op) {
-        case '+': a->r.number += b->r.number; break;
-        case '-': a->r.number -= b->r.number; break;
-        case '*': a->r.number *= b->r.number; break;
+        case '+': a->r.real += b->r.real; break;
+        case '-': a->r.real -= b->r.real; break;
+        case '*': a->r.real *= b->r.real; break;
         case '/':
-            if (b->r.number == 0) {
+            if (b->r.real == 0) {
                 obj_free(a);
                 obj_free(b);
                 a = obj_new_err("Division by 0 is undefined");
                 goto out;
             }
-            a->r.number = op[1] == '/' ? (int)a->r.number / (int)b->r.number : a->r.number / b->r.number;
+            a->r.real = op[1] == '/' ? (int)a->r.real / (int)b->r.real : a->r.real / b->r.real;
             break;
-        case '%': a->r.number = fmod(a->r.number, b->r.number); break;
-        case '^': a->r.number = (int)a->r.number ^ (int)b->r.number; break;
-        case '&': a->r.number = (int)a->r.number & (int)b->r.number; break;
-        case '|': a->r.number = (int)a->r.number | (int)b->r.number; break;
+        case '%': a->r.real = fmod(a->r.real, b->r.real); break;
+        case '^': a->r.real = (int)a->r.real ^ (int)b->r.real; break;
+        case '&': a->r.real = (int)a->r.real & (int)b->r.real; break;
+        case '|': a->r.real = (int)a->r.real | (int)b->r.real; break;
         }
-        if (strcmp(op, "min") == 0) a->r.number = a->r.number < b->r.number ? a->r.number : b->r.number;
-        if (strcmp(op, "max") == 0) a->r.number = a->r.number > b->r.number ? a->r.number : b->r.number;
+        if (strcmp(op, "min") == 0) a->r.real = a->r.real < b->r.real ? a->r.real : b->r.real;
+        if (strcmp(op, "max") == 0) a->r.real = a->r.real > b->r.real ? a->r.real : b->r.real;
         obj_free(b);
     }
 
@@ -98,13 +98,13 @@ Object *read_rel(Env *env, Object *list, const char *op)
     switch (*op) {
     case '<':
         r = op[1] == '='
-            ? list->cell[0]->r.number <= list->cell[1]->r.number
-            : list->cell[0]->r.number < list->cell[1]->r.number;
+            ? list->cell[0]->r.real <= list->cell[1]->r.real
+            : list->cell[0]->r.real < list->cell[1]->r.real;
         break;
     case '>':
         r = op[1] == '='
-            ? list->cell[0]->r.number >= list->cell[1]->r.number
-            : list->cell[0]->r.number > list->cell[1]->r.number;
+            ? list->cell[0]->r.real >= list->cell[1]->r.real
+            : list->cell[0]->r.real > list->cell[1]->r.real;
         break;
     }
     if (strcmp(op, "==") == 0)
@@ -148,7 +148,7 @@ Object *read_var(Env *env, Object *list, const char *func)
             obj_type_arr[symbols->cell[i]->type]);
 
     OBJ_ENSURE_F(list, symbols->nelem == list->nelem - 1,
-        "incorrect number of arguments (%d) for %s", list->nelem - 1, func);
+        "incorrect real of arguments (%d) for %s", list->nelem - 1, func);
 
     for (int i = 0; i < symbols->nelem; ++i) {
         if (*func == '=')
@@ -166,6 +166,13 @@ static Object *obj_read_num(const char *str)
 {
     errno = 0;
     char *end;
+    if (*str == '0' && (str[1] == 'b' || str[1] == 'x')) {
+        long n = strtol(str+2, &end, str[1] == 'b' ? 2 : 16);
+        if (errno == ERANGE || *end != '\0')
+            return obj_new_err("malformed %s number", str[1] == 'b' ? "binary" : "hexadecimal");
+        return obj_new_num(n);
+    }
+    /* Decimal otherwise */
     double n = strtod(str, &end);
     if (errno == ERANGE || *end != '\0')
         return obj_new_err("malformed number");
@@ -185,19 +192,25 @@ static Object *obj_read_sym(const char *str, int *pos)
         }
     }
     tmp[len] = '\0';
+    bool is_num = strchr("-.", *tmp) || (*tmp == '0' && (tmp[1] == 'b' || tmp[1] == 'x')) || isdigit(*tmp);
+    int base = 10;
+    if (*tmp == '0') {
+        if (tmp[1] == 'b') base = 2;
+        else if (tmp[1] == 'x') base = 16;
+        if (tmp[2] == '\0') is_num = false;
+    }
 
-    bool number = *tmp == '-' || *tmp == '.' || isdigit(*tmp);
-    for (int i = 1; tmp[i]; ++i) {
+    for (int i = (base != 10 ? 2 : 1); tmp[i]; ++i) {
         if (tmp[i] == '.') break;
-        if (!isdigit(tmp[i])) {
-            number = false;
+        if (!is_valid_number_part(tmp[i], base)) {
+            is_num = false;
             break;
         }
     }
-    if (!tmp[1] && (*tmp == '-' || *tmp == '.')) number = false; /* it's just a minus or dot */
+    if (!tmp[1] && (strchr("-.", *tmp))) is_num = false; /* it's just a minus or dot */
 
     Object *ret;
-    if (number) {
+    if (is_num) {
         ret = obj_read_num(tmp);
     } else if (strcmp(tmp, "true") == 0) {
         ret = obj_new_bool(true);

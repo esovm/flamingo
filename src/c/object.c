@@ -43,7 +43,7 @@ Object *obj_new_num(double n)
     Object *ret = malloc(sizeof(Object));
     if (!ret) return NULL;
     ret->type = O_NUMBER;
-    ret->r.number = n;
+    ret->r.real = n;
     return ret;
 }
 
@@ -64,6 +64,15 @@ Object *obj_new_err(const char *fmt, ...)
     if (!tmp) return NULL;
     ret->r.error = tmp;
     va_end(ap);
+    return ret;
+}
+
+Object *obj_new_raw(void *ptr)
+{
+    Object *ret = malloc(sizeof(Object));
+    if (!ret) return NULL;
+    ret->type = O_RAW;
+    ret->r.rawptr = ptr;
     return ret;
 }
 
@@ -164,7 +173,7 @@ Object *obj_cp(Object *obj)
 
     switch (ret->type) {
     case O_BOOLEAN: ret->r.boolean = obj->r.boolean; break;
-    case O_NUMBER: ret->r.number = obj->r.number; break;
+    case O_NUMBER: ret->r.real = obj->r.real; break;
     case O_ERROR: ret->r.error = dupstr(obj->r.error); break;
     case O_SYMBOL: ret->r.symbol = dupstr(obj->r.symbol); break;
     case O_STRING: ret->r.string = dupstr(obj->r.string); break;
@@ -245,7 +254,7 @@ bool obj_equal(Object *a, Object *b)
     if (a->type != b->type) return false;
     switch (a->type) {
     case O_BOOLEAN: return a->r.boolean == b->r.boolean;
-    case O_NUMBER: return a->r.number == b->r.number;
+    case O_NUMBER: return a->r.real == b->r.real;
     case O_SYMBOL: return strcmp(a->r.symbol, b->r.symbol) == 0;
     case O_STRING: return strcmp(a->r.string, b->r.string) == 0;
     case O_ERROR: return strcmp(a->r.error, b->r.error) == 0;
@@ -267,7 +276,7 @@ bool obj_is_truthy(Object *obj)
 {
     switch (obj->type) {
     case O_BOOLEAN: return obj->r.boolean != false;
-    case O_NUMBER: return obj->r.number != 0;
+    case O_NUMBER: return obj->r.real != 0;
     case O_STRING: return obj->r.string[0] != '\0';
     case O_SEXPR: case O_BEXPR: return obj->nelem != 0;
     default: return true;
@@ -278,7 +287,7 @@ Object *obj_to_bool(Object *obj)
 {
     switch (obj->type) {
     case O_BOOLEAN: return obj_new_bool(obj->r.boolean);
-    case O_NUMBER: return obj_new_bool(obj->r.number != 0);
+    case O_NUMBER: return obj_new_bool(obj->r.real != 0);
     case O_STRING: return obj_new_bool(*obj->r.string != '\0');
     case O_SEXPR: case O_BEXPR: return obj_new_bool(obj->nelem != 0);
     default: return obj_new_bool(true);
@@ -343,7 +352,7 @@ void obj_dump(Object *obj)
 {
     switch (obj->type) {
     case O_BOOLEAN: printf("%s", obj->r.boolean ? "true" : "false"); break;
-    case O_NUMBER: printf("%g", obj->r.number); break;
+    case O_NUMBER: printf("%g", obj->r.real); break;
     case O_ERROR: printf("[error] %s", obj->r.error); break;
     case O_SYMBOL: fputs(obj->r.symbol, stdout); break;
     case O_STRING: obj_dump_str(obj); break;

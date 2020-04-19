@@ -13,7 +13,7 @@ Object *bi_exit(Env *env, Object *obj)
     NARG("exit", obj, 1);
     EXPECT("exit", obj, 0, O_NUMBER);
 
-    int status = obj->cell[0]->r.number;
+    int status = obj->cell[0]->r.real;
     obj_free(obj);
     env_free(env);
     exit(status);

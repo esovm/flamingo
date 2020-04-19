@@ -63,3 +63,12 @@ char *readfile(const char *path)
     fclose(fp);
     return buf;
 }
+
+bool is_valid_number_part(char c, int base)
+{
+    c = tolower(c);
+    if (base == 2) return c == '0' || c == '1';
+    if (base == 10) return c >= '0' && c <= '9';
+    if (base == 16) return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+    return false; /* invalid base */
+}
