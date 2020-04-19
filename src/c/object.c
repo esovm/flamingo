@@ -194,6 +194,7 @@ Object *obj_cp(Object *obj)
         for (int i = 0; i < ret->nelem; ++i)
             ret->cell[i] = obj_cp(obj->cell[i]);
         break;
+    default: break;
     }
 
     return ret;
@@ -268,6 +269,7 @@ bool obj_equal(Object *a, Object *b)
         for (int i = 0; i < a->nelem; ++i)
             if (!obj_equal(a->cell[i], b->cell[i])) return false;
         return true;
+    default: break;
     }
     return false;
 }
@@ -369,6 +371,7 @@ void obj_dump(Object *obj)
         break;
     case O_SEXPR: obj_dump_expr(obj, '(', ')'); break;
     case O_BEXPR: obj_dump_expr(obj, '[', ']'); break;
+    default: break;
     }
 }
 

@@ -2,6 +2,7 @@
 #define FLAMINGO_OBJECT_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define OBJ_ENSURE(OBJ, CONDITION, ERROR_STR)   \
     do {                                        \
@@ -67,6 +68,9 @@ struct Object {
         bool boolean;
         long long integer;
         double real;
+        uint8_t u8;
+        uint16_t u16;
+        uint32_t u32;
         char *error;
         char *symbol;
         char *string;
