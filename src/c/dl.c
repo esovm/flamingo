@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdio.h>
 #include "object.h"
 
 #if defined(__linux__) || defined(__APPLE__) || defined(__MACH__) \
@@ -21,6 +22,7 @@
 
 #endif
 
+
 typedef enum {
     NT_INVALID = -1,
     NT_VOID,
@@ -35,6 +37,10 @@ typedef struct {
     bool is_ptr;
     TypeEnum type;
 } NativeType;
+
+/* Macro for generating function pointer from native type */
+#define native_type_fnptr(ret_type, param_types)\
+
 
 static const char *str_types[] = {"void", "char", "short", "int", "long", "long-long", "double"};
 
@@ -97,11 +103,11 @@ Object *dump_native_type(Env *env, Object *list)
 
     NativeType *nt = obj_pop(list, 0)->r.rawptr;
 
-    char *res;
+    char res[256];
 
-    snprintf();
+    snprintf(res, 255, "%s%s", str_types[nt->type], str_types[nt->is_ptr] ? "" : "*");
 
-    return obj_new_str()
+    return obj_new_str(res);
 }
 
 Object *native_type(Env *env, Object *list)
