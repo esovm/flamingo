@@ -1,11 +1,11 @@
-CFLAGS := -std=c99 -Wall -Wextra -pedantic -Iinclude
-LDLIBS = -ledit -lm
+CFLAGS := -std=c99 -Wall -Wextra -pedantic -Ilib
+LDLIBS = -lm
 
 ifeq ($(MODE), debug)
 	CFLAGS += -O0 -g
 	BUILDDIR := build/debug
 else
-	CFLAGS += -O2 -flto -Wno-unused-parameter
+	CFLAGS += -O2 -flto
 	BUILDDIR := build/release
 endif
 

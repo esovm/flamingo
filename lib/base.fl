@@ -1,0 +1,77 @@
+#############################################################
+###############   Flamingo standard library   ###############
+#############################################################
+
+# increment value of symbol `n` by 1
+(= inc (macro (n) (list '= n (list '+ n 1))))
+# decrement value of symbol `n` by 1
+(= dec (macro (n) (list '= n (list '- n 1))))
+
+# a helper macro for defining functions.
+(= $ (macro (params . body)
+  (list '= (first params) (list 'fn (rest params) (cons 'do body)))))
+
+# iterate over each element of list `l` with symbol `i`.
+(= for (macro (i l . body)
+  (list 'do
+    (list 'let 'it l)
+    (list 'while 'it
+      (list 'let i '(first it))
+      '(= it (rest it))
+      (cons 'do body)))))
+
+# return the absolute value of `n`.
+($ (abs n) (if (< n 0) (- 0 n) n))
+
+# print each argument from pair `args` followed by a newline
+($ (println . args)
+  (for arg args
+    (print arg "\n")))
+
+# pack arguments `args` to a list and call function `func` on it.
+($ (pack func . args) (func args))
+
+### list functions
+
+# join lists `l1` and `l2` together into a single new list.
+($ (join l1 l2)
+  (if (eq l1 nil)
+    l2
+    (cons (first l1) (join (rest l1) l2))))
+
+# return the length (i.e. number of elements) of list `l`.
+($ (len l)
+  (if (eq l nil)
+    0
+    (+ 1 (len (rest l)))))
+
+# reverse list `l`.
+($ (rev l)
+  (if (eq l nil)
+    nil
+    (join (rev (rest l)) (list (first l)))))
+
+# add element `e` to the beginning of list `l`.
+(= prepend (macro (e l)
+  (list '= l (list 'cons e l))))
+
+# return the element at index `n` of list `l`.
+($ (at i l)
+  (if (eq i 0)
+    (first l)
+    (at (- i 1) (rest l))))
+
+### Higher-order functions
+
+# apply function `func` on each element of list `l`.
+($ (map func l)
+  (if (eq l nil)
+    nil
+    (join (list (func (first l))) (map func (rest l)))))
+
+# return a new list with only the elements of list `l`
+# that passed the test implemented by function `func`.
+($ (filter func l)
+  (for e l
+    (if (func e) (prepend e new)))
+  (rev new))

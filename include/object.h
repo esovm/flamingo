@@ -2,6 +2,7 @@
 #define FLAMINGO_OBJECT_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define OBJ_ENSURE(OBJ, CONDITION, ERROR_STR)   \
     do {                                        \
@@ -40,6 +41,8 @@
         putchar('\n');   \
     } while (0)
 
+#define UNUSED(V) ((void)V)
+
 /* these strings have to exactly match the `obj_type` enum elements */
 extern const char *const obj_type_arr[];
 
@@ -55,17 +58,23 @@ typedef enum {
     O_STRING,
     O_FUNC,
     O_SEXPR,
-    O_BEXPR
+    O_BEXPR,
+    O_RAW
 } obj_type;
 
 struct Object {
     obj_type type;
     union {
         bool boolean;
-        double number;
+        long long integer;
+        double real;
+        uint8_t u8;
+        uint16_t u16;
+        uint32_t u32;
         char *error;
         char *symbol;
         char *string;
+        void *rawptr;
         struct {
             BuiltinFn builtin;
             Env *env;
@@ -73,7 +82,7 @@ struct Object {
             Object *body;
         } f; /* user-defined or built-in function */
     } r; /* result */
-    /* s-expression */
+    /* list */
     int nelem;
     struct Object **cell;
 };
@@ -81,6 +90,7 @@ struct Object {
 Object *obj_new_bool(bool);
 Object *obj_new_num(double);
 Object *obj_new_err(const char *, ...);
+Object *obj_new_raw(void *);
 Object *obj_new_sym(const char *);
 Object *obj_new_str(const char *);
 Object *obj_new_func(BuiltinFn);

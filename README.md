@@ -3,24 +3,23 @@
 Flamingo is a lisp-like programming language designed to be simple, embeddable and self-extending.
 
 ```lisp
-(puts 'Hello, World!')
+(println "Hello, World!")
 ```
 
 Or something a little more advanced, let's define a `map` function:
 ```lisp
 # apply function `func` on each element of list `l`.
-(fn [map func l] [
-  if (== l null)
-    [null]
-    [attach (list (func (st l))) (map func (rest l))]
-])
+($ (map func l)
+  (if (== l nil)
+    nil
+    (join (list (func (first l))) (map func (rest l)))))
 ```
-Simple, isn't it? Now let's use it with a `cube` function (third power):
+Simple, isn't it? Now let's use it with a power function:
 ```c
-=> fn [cube x] [pow x 3]
-()
-=> map cube [4 5 6]
-[64 125 216]
+=> ($ (square x) (* x x))
+nil
+=> (map square '(4 5 6))
+(16 25 36)
 ```
 
 ## Building on Unix-like systems
@@ -28,10 +27,10 @@ Simple, isn't it? Now let's use it with a `cube` function (third power):
 
 * Make
 * A modern C compiler
-* editline (on Debian-based systems: `sudo apt install libedit-dev`.
-    on macOS with Homebrew installed: `brew install libedit`)
+* Did we notice you'll need a computer too? 🤭
 
-now simply run `make` in the root directory of the project.
+Simply run `make` in the root directory of the project.
+If everything goes right, you'll have the newly created executable `flamingo` there.
 
 ---
 
@@ -40,12 +39,12 @@ now simply run `make` in the root directory of the project.
 Like every language (we hope), Flamingo is capable of printing stuff to the screen:
 
 ```lisp
-(puts 'I love pizza 🍕!')
+(println 'I love pizza 🍕!')
 ```
 From this simple example, you can already see 3 things about Flamingo:
 * Every expression in Flamingo is parenthesized (except for in REPL, where they are optional).
-* `puts` is short for "put string" and can output any expression to standard output.
-* Strings are sequences of characters enclosed in single quotes.
+* `println` is short for "print line" and can output any expression to standard output with a newline (`'\n'`) after it. (there's also just `print`, if you don't want a newline).
+* Strings are sequences of characters enclosed in double quotes `("...")`.
 
 ### Main concepts
 
@@ -58,68 +57,101 @@ An s-expression (for "symbolic expression") is a way of writing lists, and using
 1. an atom (e.g. a symbol, number, or a string), or
 2. an expression of the form `(a b)` where `a` and `b` are s-expressions.
 
+**`quote` (or just `'` for short)**
 
-**B-Expression (for "Bracket expression")**
+`'(a b c ...)`
 
-`[a b c ...]`
-
-Like s-expressions, b-expression are lists. Unlike s-expressions, they don't get evaluated by the default `eval` function. This is useful when you need to decide if the should ever be executed, or should be executed several times, or just kept as it is.
-Good example would structure "if", in this case "No" never gets printed and the expression `[puts 'No']`is never evaluated.
+Like s-expressions, quotes are lists. Unlike s-expressions, they don't get evaluated, they just stay as they are. This is useful when you need to decide if they should ever be executed, or should be executed several times, or just kept as they are. A good example would be the standard library macro '`$`', which is defined as follows:
 
 ```lisp
-(if [== 1 1] [puts 'Yes'] [puts 'No'])
+# a helper macro for defining functions.
+(= $ (macro (params . body)
+  (list '= (first params) (list 'fn (rest params) (cons 'do body)))))
 ```
 
-With the nature of a B-expression, you can make lots of interesting things, from arrays to dictionary-like structures:
+As you can see, we use a quote on `=`, `fn` and `do` in order to force them to just stay as they are. Quotes are very commonly used with macros, e.g. the standard library `for` macro, which allows us to iterate over a list:
+```lisp
+# iterate over each element of list `l` with symbol `i`.
+(= for (macro (i l . body)
+  (list 'do
+    (list 'let 'it l)
+    (list 'while 'it
+      (list 'let i '(first it))
+      '(= it (rest it))
+      (cons 'do body)))))
+```
+```lisp
+(= primes (list 2 3 5 7 11))
+(for p primes
+  (print " -> " p))
+
+# ->  2 ->  3 ->  5 ->  7 ->  11
+```
+
+With the nature of them, you can make lots of interesting things, from arrays to dictionary-like structures:
 
 ```lisp
-(first [11 22 33 44 55 66 77]) # 11
+(first '(11 22 33 44 55 66 77)) # 11
 ```
 
 Mix in some types, why not?
 
 ```lisp
-['Hello world' 1 2 3 [1 'Nested'] some-identifier 'The next is an expression, that can be evalueted' [* 2 PI]]
+'("Hello world" 1 2 3 '(1 "Nested") some-identifier "The next is an expression, that can be evalueted" '(* 2 PI))
 ```
 
-To evaluate a B-expression, simply call the built-in `eval` function:
-
-```lisp
-(eval [* 2 PI])) # 6.28319
-```
+The following are equivalent: `'(x y z)`, `(list x y z)`.
 
 ---
 
 **Lets look at some built-in and base functions as well as some essential structures!**
 ---
-`fn` - a helper function for defining functions
+`fn` - a built-in function for defining functions
 
-This function uses the built-in lambda (see `$`), and is defined in the base library as follows:
+This function allows us to create user-defined functions, and using them by assigning them to symbols. For example, a simple factorial function can be written as:
 
 ```lisp
-(def [fn] ($ [params body] [
-  def (first params) ($ (rest params) body)
-]))
-```
+(= fact (n)
+  (if (< n 2)
+    n
+    (* n (fact (- n 1)))))
 
-As we can see, it creates a global variable (see `def` section), whose value is a lambda function. Then, it uses the `first` argument as the function name, and the `rest` of the arguments as the arguments of the actual function.
+(println (fact 6)) # 720
+```
+Usually, the macro `$` is used to create functions. (it uses `fn` under the hood).
 
 ---
-`use` - import a file into another and evaluate its contents
+`while`
+(while condition ...)
+
+Evaluate the rest of the arguments until condition evaluates to nil, which is falsey.
+
+```lisp
+(= i 10)
+(while (> i 0)
+  (print i)
+  (dec i))
+
+# 10  9  8  7  6  5  4  3  2  1
+```
+
+---
+
+**TODO** `use` - import a file into another and evaluate its contents
 
 Let's say we have a file named `add2.fl` with the following function definition:
 ```lisp
 # add2.fl
-(fn [add2 x] [+ x 2])
+($ (add2 x) (+ x 2))
 ```
 We also have another file, `add4.fl` which wants to use the `add2` function. How do we import it? with the built-in `use` function!:
 
 ```lisp
 # add4.fl
 
-(use 'add2.fl')
+(use "add2.fl")
 
-(fn [add4 x] [ add2 (add2 x) ])
+($ (add4 x) (add2 (add2 x)))
 ```
 
 ---
@@ -129,8 +161,22 @@ We also have another file, `add4.fl` which wants to use the `add2` function. How
 Function that chooses the branch depending on given condition:
 
 ```lisp
-(if [some-very-complex-expression] [puts 'Then branch'] [puts 'Else branch'])
+(if (some-very-complex-expression) (println 'Then branch') (println 'Else branch'))
 ```
+As you would expect, you can use multiple conditions with `if`, just like `else if` in other languages:
+```lisp
+(= name "Michael")
+(if (eq name "John")
+  (println "Hey Johnny boy!")
+  (eq name "Alice")
+  (println "Hey Alice girl!")
+  (eq name "Michael")
+  (println "Michael! Hee Hee")
+  (println "I don't know you! get out of my house!"))
+
+# prints "Michael! Hee Hee"
+```
+`eq` is a built-in that checks for equality between two objects.
 
 ---
 
@@ -138,52 +184,34 @@ Function that chooses the branch depending on given condition:
 
 Function that evaluates a list of expressions in order and returns the last one:
 
-
 ```lisp
-(do
-    (puts 'First')
-    (puts 'Second')
-    (puts 'Third')
-    'Return me'
-)
+(do "First"
+    "Second"
+    "Third"
+    "Return me")
+
+# "Return me"
 ```
 
 ---
 
 `let`
 
-Create a scope for stuff to take place in:
+Creates a locally available variable with specified name and initial value:
 
 ```lisp
-(let [do
-    (= [x] 10)
-    (puts x) # 10
-])
-
-(puts x) # [error] Use of undefined symbol 'x'
-
+(let var-name value)
 ```
 
 ---
 
-`$`
 
-Creates a lambda function:
+`=`
 
-```lisp
-(puts (($ [x] [* 2 x]) 10)) # Lamda that multiplies by 2,
-# we then pass a parameter of 10, outputs 20
-```
-
-
----
-
-`def`
-
-Creates a global variable with specified name and initial value:
+Creates a globally available variable with specified name and initial value:
 
 ```lisp
-(def [var-name] value)
+(= var-name value)
 ```
 
 
@@ -191,50 +219,50 @@ Creates a global variable with specified name and initial value:
 
 `first`
 
-Returns first element from B-expression:
+Returns first element from list:
 
 ```lisp
-(puts (first [3 2 1])) # Outputs 3
+(println (first '(3 2 1))) # outputs 3
 ```
 
 ---
 
 `rest`
 
-Returns rest of B-expression (i.e. the B-expression without the first element):
+Returns rest of list (i.e. the list without the first element):
 
 ```lisp
-(puts (rest [1 2 3])) # Outputs [2 3]
+(println (rest '(1 2 3))) # outputs (2 3)
 ```
 
 ---
 
 `rev`
 
-Reverses B-expression:
+Reverses list:
 
 ```lisp
-(puts (rev [1 2 3])) # Outputs [3 2 1]
+(println (rev '(.5 1.5 2.5 3.5))) # outputs (3.5 2.5 1.5 .5)
 ```
 
 ---
 
 `at`
 
-Returns the element the specified index of B-expression:
+Returns the element the specified index of list:
 
 ```lisp
-(puts (at 1 [1 2 3])) # Outputs 2
+(println (at 1 '(1 2 3))) # outputs 2
 ```
 
 ---
 
 `len`
 
-Returns length (i.e. number of elements) of B-expression:
+Returns length (i.e. number of elements) of list:
 
 ```lisp
-(puts (len [1 3 5 93.4 ['nested' 'cool']])) # Outputs 5
+(println (len '(1 3 5 93.4 '("nested" "cool")))) # outputs 5
 ```
 
 ---
@@ -244,28 +272,13 @@ Returns length (i.e. number of elements) of B-expression:
 Applies a function on each element of the list:
 
 ```lisp
-(fn [my-function x] [* 3 x])
+($ (my-function x) (* 3 x))
 
-(puts (map my-function [1 2 3])) # Outputs [3 6 9]
+(println (map my-function '(1 2 3))) # outputs (3 6 9)
 
 # We can also use lambdas here
 
-(puts (map ($[x] [* 3 x]) [1 2 3])) # Outputs [3 6 9]
-```
-
----
-
-`range`
-
-Generic range function
-
-`range from to step`
-
-```lisp
-(puts (range 1 5 1)) # [1 2 3 4]
-(puts (range -1 5 1)) # [-1 0 1 2 3 4]
-(puts (range 5 1 1)) # [5 3 4 2]
-(puts (range 5 -1 1)) # [5 3 4 2 1 0]
+(println (map (fn (x) (* 3 x)) (list 1 2 3))) # same output
 ```
 
 ---
@@ -275,5 +288,8 @@ Generic range function
 Returns absolute value of expression
 
 ```lisp
-(puts (abs -4)) # 4
+(println (abs -4)) # 4
 ```
+---
+
+For a complete view of the useful functions and macros available in Flamingo, check out the base (standard) libary [here](https://github.com/TomerShech/flamingo/blob/master/lib/base.fl).
