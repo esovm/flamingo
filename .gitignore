@@ -89,5 +89,4 @@ Temporary Items
 # End of https://www.gitignore.io/api/c,macos,code
 
 build/
-ex*
 flamingo
