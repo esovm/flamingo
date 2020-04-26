@@ -1,24 +1,20 @@
 #include "gc.h"
 
-void Fl_Gc_push(Fl_Context *ctx, Fl_Object *obj)
-{
+void Fl_Gc_push(Fl_Context *ctx, Fl_Object *obj) {
     if (ctx->gcstack_index == GC_MAX_STACK_SIZE)
         Fl_error(ctx, "garbage collector stack overflow :(\n");
     ctx->gcstack[ctx->gcstack_index++] = obj;
 }
 
-void Fl_Gc_restore(Fl_Context *ctx, int index)
-{
+void Fl_Gc_restore(Fl_Context *ctx, int index) {
     ctx->gcstack_index = index;
 }
 
-int Fl_Gc_save(Fl_Context *ctx)
-{
+int Fl_Gc_save(Fl_Context *ctx) {
     return ctx->gcstack_index;
 }
 
-void Fl_Gc_mark(Fl_Context *ctx, Fl_Object *obj)
-{
+void Fl_Gc_mark(Fl_Context *ctx, Fl_Object *obj) {
 begin:
     if (M_tag(obj) & GC_MARKBIT)
         return;
@@ -42,8 +38,7 @@ begin:
     }
 }
 
-void Fl_Gc_collect(Fl_Context *ctx)
-{
+void Fl_Gc_collect(Fl_Context *ctx) {
     /* mark all */
     for (int i = 0; i < ctx->gcstack_index; ++i)
         Fl_Gc_mark(ctx, ctx->gcstack[i]);

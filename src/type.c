@@ -2,8 +2,7 @@
 
 #include "type.h"
 
-Fl_Object *Fl_str_make(Fl_Context *ctx, Fl_Object *tail, int c)
-{
+Fl_Object *Fl_str_make(Fl_Context *ctx, Fl_Object *tail, int c) {
     if (!tail || M_strbuf(tail)[STR_BUF_SIZE - 1] != '\0') {
         Fl_Object *obj = Fl_T_cons(ctx, NULL, &nil);
         M_settype(obj, T_STRING);
@@ -17,29 +16,25 @@ Fl_Object *Fl_str_make(Fl_Context *ctx, Fl_Object *tail, int c)
     return tail;
 }
 
-Fl_Object *Fl_T_cons(Fl_Context *ctx, Fl_Object *car, Fl_Object *cdr)
-{
+Fl_Object *Fl_T_cons(Fl_Context *ctx, Fl_Object *car, Fl_Object *cdr) {
     Fl_Object *obj = Fl_object(ctx);
     M_first(obj) = car;
     M_rest(obj) = cdr;
     return obj;
 }
 
-Fl_Object *Fl_T_bool(Fl_Context *ctx, bool b)
-{
-    return b ? ctx->True : &nil;
+Fl_Object *Fl_T_bool(Fl_Context *ctx, bool b) {
+    return b ? ctx->t : &nil;
 }
 
-Fl_Object *Fl_T_number(Fl_Context *ctx, Fl_Number n)
-{
+Fl_Object *Fl_T_number(Fl_Context *ctx, Fl_Number n) {
     Fl_Object *obj = Fl_object(ctx);
     M_settype(obj, T_NUMBER);
     M_number(obj) = n;
     return obj;
 }
 
-Fl_Object *Fl_T_string(Fl_Context *ctx, const char *str)
-{
+Fl_Object *Fl_T_string(Fl_Context *ctx, const char *str) {
     Fl_Object *obj = Fl_str_make(ctx, NULL, '\0'),
         *tail = obj;
     while (*str)
@@ -47,8 +42,7 @@ Fl_Object *Fl_T_string(Fl_Context *ctx, const char *str)
     return obj;
 }
 
-Fl_Object *Fl_T_symbol(Fl_Context *ctx, const char *name)
-{
+Fl_Object *Fl_T_symbol(Fl_Context *ctx, const char *name) {
     /* try to find it in the symbol list */
     for (Fl_Object *obj = ctx->sym_list; !M_isnil(obj); obj = M_rest(obj))
         if (Fl_str_equal(M_first(M_rest(M_first(obj))), name))
@@ -61,16 +55,14 @@ Fl_Object *Fl_T_symbol(Fl_Context *ctx, const char *name)
     return new_obj;
 }
 
-Fl_Object *Fl_T_cfunc(Fl_Context *ctx, Fl_CFunc fn)
-{
+Fl_Object *Fl_T_cfunc(Fl_Context *ctx, Fl_CFunc fn) {
     Fl_Object *obj = Fl_object(ctx);
     M_settype(obj, T_CFUNC);
     M_cfunc(obj) = fn;
     return obj;
 }
 
-Fl_Object *Fl_T_ptr(Fl_Context *ctx, void *ptr)
-{
+Fl_Object *Fl_T_ptr(Fl_Context *ctx, void *ptr) {
     Fl_Object *obj = Fl_object(ctx);
     M_settype(obj, T_PTR);
     M_rest(obj) = ptr;

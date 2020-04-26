@@ -6,6 +6,7 @@
 #include <stdbool.h>
 
 #define FLAMINGO_VERSION "0.5.0"
+#define MAX_BUF_LEN 64 /* a random but reasonable number */
 
 /* M_ prefix for all macro functions */
 
@@ -61,7 +62,7 @@ struct Fl_Context {
     Fl_Object *call_list;
     Fl_Object *free_list;
     Fl_Object *sym_list;
-    Fl_Object *True; /* everything that is not nil */
+    Fl_Object *t; /* everything that is not nil */
     int next_char;
 };
 
@@ -80,6 +81,7 @@ Fl_Object *Fl_object(Fl_Context *ctx);
 
 Fl_Context *Fl_open(void *ptr, int size);
 void Fl_close(Fl_Context *ctx);
+void Fl_run_file(Fl_Context *ctx, FILE *fp);
 Fl_Handlers *Fl_handlers(Fl_Context *ctx);
 void Fl_error(Fl_Context *ctx, const char *message);
 Fl_Object *Fl_next_arg(Fl_Context *ctx, Fl_Object **arg);
@@ -92,14 +94,14 @@ void Fl_Gc_restore(Fl_Context *ctx, int idx);
 int Fl_Gc_save(Fl_Context *ctx);
 void Fl_Gc_mark(Fl_Context *ctx, Fl_Object *obj);
 
-Fl_Object *Fl_list(Fl_Context *ctx, Fl_Object **objs, int n);
+Fl_Object *Fl_list(Fl_Context *ctx, Fl_Object **objects, int n);
 Fl_Object *Fl_first(Fl_Context *ctx, Fl_Object *obj);
 Fl_Object *Fl_rest(Fl_Context *ctx, Fl_Object *obj);
 
 void Fl_write(Fl_Context *ctx, Fl_Object *obj, Fl_Write_fn fn, void *data, bool with_quotes);
 void Fl_writefp(Fl_Context *ctx, Fl_Object *obj, FILE *fp);
 
-int Fl_to_string(Fl_Context *ctx, Fl_Object *obj, char *dst, int size);
+int Fl_to_string(Fl_Context *ctx, Fl_Object *obj, char *buf, int size);
 Fl_Number Fl_to_number(Fl_Context *ctx, Fl_Object *obj);
 void *Fl_to_ptr(Fl_Context *ctx, Fl_Object *obj);
 
