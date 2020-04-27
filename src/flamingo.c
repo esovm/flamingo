@@ -237,8 +237,7 @@ static Fl_Object *p_get_bound(Fl_Object *sym, Fl_Object *env) {
     return M_rest(sym);
 }
 
-void Fl_set(Fl_Context *ctx, Fl_Object *sym, Fl_Object *value)
-{
+void Fl_set(Fl_Context *ctx, Fl_Object *sym, Fl_Object *value) {
     M_unused(ctx);
     M_rest(p_get_bound(sym, &nil)) = value;
 }

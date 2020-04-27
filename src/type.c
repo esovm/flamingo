@@ -3,7 +3,7 @@
 #include "type.h"
 
 Fl_Object *Fl_str_make(Fl_Context *ctx, Fl_Object *tail, int c) {
-    if (!tail || M_strbuf(tail)[STR_BUF_SIZE - 1] != '\0') {
+    if (!tail || M_strbuf(tail)[STR_BUF_SIZE - 1]) {
         Fl_Object *obj = Fl_T_cons(ctx, NULL, &nil);
         M_settype(obj, T_STRING);
         if (tail) {

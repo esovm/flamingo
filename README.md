@@ -10,7 +10,7 @@ Or something a little more advanced, let's define a `map` function:
 ```lisp
 # apply function `func` on each element of list `l`.
 ($ (map func l)
-  (if (== l nil)
+  (if (= l nil)
     nil
     (join (list (func (first l))) (map func (rest l)))))
 ```
@@ -65,23 +65,23 @@ Like s-expressions, quotes are lists. Unlike s-expressions, they don't get evalu
 
 ```lisp
 # a helper macro for defining functions.
-(= $ (macro (params . body)
-  (list '= (first params) (list 'fn (rest params) (cons 'do body)))))
+(set $ (macro (params . body)
+  (list 'set (first params) (list 'fn (rest params) (cons 'do body)))))
 ```
 
-As you can see, we use a quote on `=`, `fn` and `do` in order to force them to just stay as they are. Quotes are very commonly used with macros, e.g. the standard library `for` macro, which allows us to iterate over a list:
+As you can see, we use a quote on `set`, `fn` and `do` in order to force them to just stay as they are. Quotes are very commonly used with macros, e.g. the standard library `for` macro, which allows us to iterate over a list:
 ```lisp
 # iterate over each element of list `l` with symbol `i`.
-(= for (macro (i l . body)
+(set for (macro (i l . body)
   (list 'do
     (list 'let 'it l)
     (list 'while 'it
       (list 'let i '(first it))
-      '(= it (rest it))
+      '(set it (rest it))
       (cons 'do body)))))
 ```
 ```lisp
-(= primes (list 2 3 5 7 11))
+(set primes (list 2 3 5 7 11))
 (for p primes
   (print " -> " p))
 
@@ -111,7 +111,7 @@ The following are equivalent: `'(x y z)`, `(list x y z)`.
 This function allows us to create user-defined functions, and using them by assigning them to symbols. For example, a simple factorial function can be written as:
 
 ```lisp
-(= fact (n)
+(set fact (n)
   (if (< n 2)
     n
     (* n (fact (- n 1)))))
@@ -127,7 +127,7 @@ Usually, the macro `$` is used to create functions. (it uses `fn` under the hood
 Evaluate the rest of the arguments until condition evaluates to nil, which is falsey.
 
 ```lisp
-(= i 10)
+(set i 10)
 (while (> i 0)
   (print i)
   (dec i))
@@ -165,18 +165,18 @@ Function that chooses the branch depending on given condition:
 ```
 As you would expect, you can use multiple conditions with `if`, just like `else if` in other languages:
 ```lisp
-(= name "Michael")
-(if (eq name "John")
+(set name "Michael")
+(if (= name "John")
   (println "Hey Johnny boy!")
-  (eq name "Alice")
+  (= name "Alice")
   (println "Hey Alice girl!")
-  (eq name "Michael")
+  (= name "Michael")
   (println "Michael! Hee Hee")
   (println "I don't know you! get out of my house!"))
 
 # prints "Michael! Hee Hee"
 ```
-`eq` is a built-in that checks for equality between two objects.
+`=` is a built-in that checks for equality between two objects.
 
 ---
 
@@ -206,12 +206,12 @@ Creates a locally available variable with specified name and initial value:
 ---
 
 
-`=`
+`set`
 
 Creates a globally available variable with specified name and initial value:
 
 ```lisp
-(= var-name value)
+(set var-name value)
 ```
 
 
