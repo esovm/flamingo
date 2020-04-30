@@ -6,13 +6,13 @@
 
 /* IMPORTANT: this enum and `builtins` array element order must match */
 enum {
-    BI_LET, BI_SET, BI_IF, BI_FN, BI_MACRO, BI_USE, BI_WHILE, BI_QUOTE,
+    BI_LET, BI_SET, BI_IF, BI_FN, BI_MACRO, BI_USE, BI_WHILE, BI_QUOTE, BI_EVAL,
     BI_AND, BI_OR, BI_DO, BI_CONS, BI_FIRST, BI_REST, BI_SETF, BI_SETR, BI_LIST, BI_NOT, BI_ATOM, BI_PRINT,
     BI_EQ, BI_LT, BI_LE, BI_GT, BI_GE, BI_ADD, BI_SUB, BI_MUL, BI_DIV, BI_LEN
 };
 
 static const char *const builtins[BI_LEN] = {
-    "let", "set", "if", "fn", "macro", "use", "while", "quote",
+    "let", "set", "if", "fn", "macro", "use", "while", "quote", "eval",
     "and", "or", "do", "cons", "first", "rest", "setf", "setr", "list", "not", "atom", "print",
     "=", "<", "<=", ">", ">=", "+", "-", "*", "/"
 };
@@ -20,7 +20,7 @@ static const char *const builtins[BI_LEN] = {
 static const char *const types[] = {
     "pair", "free", "nil", "number",
     "symbol", "string", "function", "macro",
-    "builtin", "c-function", "ptr"
+    "built-in", "c-function", "ptr"
 };
 
 Fl_Object nil = { { (void *)(T_NIL << 2 | 1) }, { NULL } };
@@ -379,7 +379,8 @@ static Fl_Object *args_to_env(Fl_Context *ctx, Fl_Object *prm, Fl_Object *arg, F
     return env;
 }
 
-#define eval_arg() p_eval(ctx, Fl_next_arg(ctx, &arg), env, NULL)
+#define eval_arg() \
+    p_eval(ctx, Fl_next_arg(ctx, &arg), env, NULL)
 
 #define arithmetic_op(op) {                          \
         Fl_Number n = Fl_to_number(ctx, eval_arg()); \
@@ -462,6 +463,10 @@ static Fl_Object *p_eval(Fl_Context *ctx, Fl_Object *obj, Fl_Object *env, Fl_Obj
             break;
         case BI_QUOTE:
             res = Fl_next_arg(ctx, &arg);
+            break;
+        case BI_EVAL:
+            val1 = p_check_type(ctx, Fl_next_arg(ctx, &arg), T_PAIR);
+            res = do_list(ctx, val1, env);
             break;
         case BI_AND:
             while (!M_isnil(arg) && !M_isnil(res = eval_arg()));
