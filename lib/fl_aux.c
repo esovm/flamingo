@@ -27,9 +27,12 @@ static Fl_Object *aux_platform(Fl_Context *ctx, Fl_Object *args) {
 static Fl_Object *aux_read(Fl_Context *ctx, Fl_Object *args) {
     M_unused(args);
     char *line = NULL;
-    size_t len;
-    if (getline(&line, &len, stdin) == -1)
+    size_t len = 0;
+    ssize_t nread;
+    if ((nread = getline(&line, &len, stdin)) == -1)
         return &nil;
+    if (line[nread - 1] == '\n')
+        line[nread-- - 1] = '\0';
     Fl_Object *ret = Fl_T_string(ctx, line);
     free(line);
     return ret;
@@ -40,7 +43,7 @@ static Fl_Object *aux_str_to_num(Fl_Context *ctx, Fl_Object *args) {
     char *end, buf[MAX_BUF_LEN];
     Fl_to_string(ctx, Fl_next_arg(ctx, &args), buf, sizeof(buf));
     Fl_Number n = strtod(buf, &end);
-    return Fl_T_number(ctx, *end ? n : -1);
+    return Fl_T_number(ctx, *end ? -1 : n);
 }
 
 void aux_register_all(Fl_Context *ctx) {
