@@ -2,6 +2,8 @@
 
 Flamingo is a lisp-like programming language designed to be simple, embeddable and self-extending.
 
+Some of its features are: simple syntax, dynamic typing, mark-and-sweep garbage collecting and the Lisp heritage we all love.
+
 ```lisp
 (println "Hello, World!")
 ```
@@ -25,13 +27,22 @@ nil
 ## Building on Unix-like systems
 #### Requirements
 
-* Make
+* CMake
 * A modern C compiler
 * Did we notice you'll need a computer too? 🤭
 
-Simply run `make` in the root directory of the project.
-If everything goes right, you'll have the newly created executable `flamingo` there.
+Simply run the following commands to get yourself Flamingo.
+If everything goes right, you'll have the newly created executable `flamingo` in `build`.
 
+You can then just copy it to `/usr/local/bin` for convenience.
+
+```sh
+git clone https://github.com/TomerShech/flamingo # Clone the repository
+cd flamingo                                      # Change current working directory to it
+mkdir build && cd build                          # Make a new build folder and cd into it
+cmake -DCMAKE_BUILD_TYPE=Release ..              # Run CMake in Release mode
+make                                             # And finally, make it
+```
 ---
 
 ## Hello Flamingo
