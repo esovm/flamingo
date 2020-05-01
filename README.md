@@ -1,8 +1,6 @@
 # 🦩 Welcome to Flamingo
 
-Flamingo is a lisp-like programming language designed to be simple, embeddable and self-extending.
-
-Some of its features are: simple syntax, dynamic typing, mark-and-sweep garbage collecting and the Lisp heritage we all love.
+Flamingo is a lisp-like programming language designed to be simple, embeddable and self-extending. Some of its features are: simple syntax, dynamic typing, mark-and-sweep garbage collecting and the Lisp heritage we all love.
 
 ```lisp
 (println "Hello, World!")
