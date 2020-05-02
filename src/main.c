@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
-#include <editline/readline.h>
 
 #include "fl_lib.h"
 #include "flamingo.h"
