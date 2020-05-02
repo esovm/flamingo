@@ -30,9 +30,7 @@ nil
 * Did we notice you'll need a computer too? 🤭
 
 Simply run the following commands to get yourself Flamingo.
-If everything goes right, you'll have the newly created executable `flamingo` in `build`.
-
-You can then just copy it to `/usr/local/bin` for convenience.
+If everything goes right, you'll have the newly created executable `flamingo` in `build`. You can then optionally install it with `make install`.
 
 ```sh
 git clone https://github.com/TomerShech/flamingo # Clone the repository
@@ -40,7 +38,11 @@ cd flamingo                                      # Change current working direct
 mkdir build && cd build                          # Make a new build folder and cd into it
 cmake -DCMAKE_BUILD_TYPE=Release ..              # Run CMake in Release mode
 make                                             # And finally, make it
+
+# Optional, but recommended. Installs to /usr/local/bin by default.
+make install
 ```
+
 ---
 
 ## Hello Flamingo
