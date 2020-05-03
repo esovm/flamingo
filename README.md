@@ -41,7 +41,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..              # Run CMake in Release mode
 make                                             # And finally, make it
 
 # Optional, but recommended. Installs to /usr/local/bin by default.
-make install
+[sudo] make install/strip
 ```
 
 ---
