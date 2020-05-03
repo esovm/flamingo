@@ -29,8 +29,9 @@ nil
 * A modern C compiler
 * Did we notice you'll need a computer too? 🤭
 
-Simply run the following commands to get yourself Flamingo.
-If everything goes right, you'll have the newly created executable `flamingo` in `build`. You can then optionally install it with `make install`.
+We love automation, if you too, just run the `install.sh` script to build and install Flamingo (`./install.sh` or `sh install.sh`).
+
+Or, of course - do it manually with following commands:
 
 ```sh
 git clone https://github.com/TomerShech/flamingo # Clone the repository
