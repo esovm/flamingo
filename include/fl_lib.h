@@ -3,7 +3,7 @@
 
 #include "flamingo.h"
 
-void aux_register_all(Fl_Context *);
+void bs_register_all(Fl_Context *);
 void math_register_all(Fl_Context *);
 
 #endif /* FLAMINGO_LIB_H */

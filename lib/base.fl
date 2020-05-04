@@ -56,7 +56,7 @@
 (set prepend (macro (e l)
   (list 'set l (list 'cons e l))))
 
-# return the element at index `n` of list `l`.
+# return the element at index `i` of list `l`.
 ($ (at i l)
   (if (= i 0)
     (first l)
@@ -76,3 +76,11 @@
   (for e l
     (if (func e) (prepend e new)))
   (rev new))
+
+($ (range min max)
+  (set i (- max min))
+  (while (>= i 0)
+    (prepend i l)
+    (dec i))
+  (for e l
+    (set e (+ e min))))

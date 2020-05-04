@@ -5,28 +5,8 @@
 #include <pwd.h>
 
 #include "fl_lib.h"
+#include "util.h"
 #include "flamingo.h"
-
-static const char *const OS =
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-#ifdef _WIN64
-    "Windows (64-bit)";
-#else
-    "Windows (32-bit)";
-#endif
-#elif __APPLE__
-    "macOS";
-#elif __linux__
-    "Linux";
-#elif __FreeBSD__
-    "FreeBSD";
-#elif __unix__
-    "Unix";
-#elif defined(_POSIX_VERSION)
-    "Posix";
-#else
-    "Unknown";
-#endif
 
 static jmp_buf global_execution_context;
 static char buf[1024 * 64];
@@ -68,13 +48,13 @@ int main(int argc, char **argv) {
     Fl_Context *ctx = Fl_open(buf, sizeof(buf));
 
     p_load(ctx, "base.fl");
-    aux_register_all(ctx);
+    bs_register_all(ctx);
 
     if (argc > 1 && !(fp = fopen(argv[1], "r")))
         Fl_error(ctx, "could not open file");
     if (fp == stdin) {
         Fl_handlers(ctx)->error = p_error;
-        printf("Flamingo %s on %s\n", FLAMINGO_VERSION, OS);
+        printf("Flamingo %s on %s\n", FLAMINGO_VERSION, os_name());
     }
 
     int gci = Fl_Gc_save(ctx); /* gc stack index */

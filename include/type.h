@@ -11,4 +11,4 @@ Fl_Object *Fl_T_symbol(Fl_Context *ctx, const char *name);
 Fl_Object *Fl_T_cfunc(Fl_Context *ctx, Fl_CFunc fn);
 Fl_Object *Fl_T_ptr(Fl_Context *ctx, void *ptr);
 
-#endif
+#endif /* FLAMINGO_TYPE_H */

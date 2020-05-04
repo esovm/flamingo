@@ -14,7 +14,7 @@ set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS)
 include_directories("include")
 
 ## Source files
-file(GLOB SOURCES "src/*.c" "lib/fl_aux.c")
+file(GLOB SOURCES "src/*.c" "lib/fl_base.c")
 
 ## Executable
 add_executable(${PROJECT_NAME} ${SOURCES})
