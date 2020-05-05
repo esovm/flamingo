@@ -1,7 +1,7 @@
 #include <math.h>
 
 #include "type.h"
-#include "fl_lib.h"
+#include "lib.h"
 
 static Fl_Object *math_pow(Fl_Context *ctx, Fl_Object *args) {
     Fl_Number a = Fl_to_number(ctx, Fl_next_arg(ctx, &args));

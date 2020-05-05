@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 
-#include "fl_lib.h"
+#include "lib.h"
 #include "util.h"
 #include "flamingo.h"
 

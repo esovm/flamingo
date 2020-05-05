@@ -6,7 +6,7 @@
 
 #include "type.h"
 #include "util.h"
-#include "fl_lib.h"
+#include "lib.h"
 
 static Fl_Object *bs_platform(Fl_Context *ctx, Fl_Object *args) {
     M_unused(args);
@@ -19,7 +19,7 @@ static Fl_Object *bs_read(Fl_Context *ctx, Fl_Object *args) {
     size_t len = 0;
     ssize_t nread;
     if ((nread = getline(&line, &len, stdin)) == -1)
-        return &nil;
+        return Fl_T_bool(ctx, false);
     if (line[nread - 1] == '\n')
         line[nread-- - 1] = '\0';
     Fl_Object *ret = Fl_T_string(ctx, line);
