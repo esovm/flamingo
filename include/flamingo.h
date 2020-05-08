@@ -27,7 +27,7 @@
 #define GC_MARKBIT         2
 #define GC_MAX_STACK_SIZE  256
 
-typedef float Fl_Number;
+typedef double Fl_Number;
 typedef struct Fl_Object Fl_Object;
 typedef struct Fl_Context Fl_Context;
 
