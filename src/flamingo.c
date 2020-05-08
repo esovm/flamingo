@@ -146,7 +146,7 @@ void Fl_write(Fl_Context *ctx, Fl_Object *obj, Fl_Write_fn wfn, void *data, bool
         p_str_write(ctx, wfn, data, "nil");
         break;
     case T_NUMBER:
-        snprintf(buf, sizeof(buf), "%.7g", M_number(obj));
+        snprintf(buf, sizeof(buf), "%.14g", M_number(obj));
         p_str_write(ctx, wfn, data, buf);
         break;
     case T_PAIR:
