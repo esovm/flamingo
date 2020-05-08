@@ -8,8 +8,20 @@
 #include "util.h"
 #include "flamingo.h"
 
+#define PROGRAM_NAME "flamingo"
+static const char *program_name = PROGRAM_NAME;
+
 static jmp_buf global_execution_context;
 static char buf[1024 * 64];
+
+static void p_print_help(int exit_status) {
+    printf("Usage: %s [-v] [-s string] [file ...]\n"
+    "Options:\n"
+    "  -s str   execute string 'str'\n"
+    "  -h       print help (this text) and exit\n"
+    "  -v       print version information and exit\n", program_name);
+    exit(exit_status);
+}
 
 static void p_error(Fl_Context *ctx, const char *message, Fl_Object *call_list) {
     M_unused(ctx);
@@ -52,25 +64,25 @@ int main(int argc, char **argv) {
     p_load(ctx, "base.fl");
     bs_register_all(ctx);
 
-    while ((c = getopt(argc, argv, "s:")) != -1) {
+    while ((c = getopt(argc, argv, "vhs:")) != -1) {
         switch (c) {
+        case 'v':
+            printf("%s %s\n", program_name, FLAMINGO_VERSION);
+            return EXIT_SUCCESS;
+        case 'h':
+            p_print_help(EXIT_SUCCESS);
         case 's':
             exec_str = optarg;
             break;
-        case '?':
-            if (optopt == 's')
-                fprintf(stderr, "Option -%c requires an argument\n", optopt);
-            else
-                fprintf(stderr, "Unknown option -%c\n", optopt);
-            /* fallthrough */
         default:
-            return 1;
+            p_print_help(EXIT_FAILURE);
         }
     }
+
     if (exec_str) {
         if (!(fp = tmpfile())) {
-            fputs("unexpected error, could not execute given string\n", stderr);
-            return 1;
+            fprintf(stderr, "unexpected error, could not execute given string '%s'\n", exec_str);
+            return EXIT_FAILURE;
         }
         fputs(exec_str, fp);
     } else if (argc > 1 && !(fp = fopen(argv[1], "r"))) {
@@ -79,7 +91,7 @@ int main(int argc, char **argv) {
 
     if (fp == stdin) {
         Fl_handlers(ctx)->error = p_error;
-        printf("Flamingo %s on %s\n", FLAMINGO_VERSION, os_name());
+        printf("%s %s on %s\n", program_name, FLAMINGO_VERSION, os_name());
     }
 
     int gci = Fl_Gc_save(ctx); /* gc stack index */
@@ -91,12 +103,12 @@ int main(int argc, char **argv) {
         if (!(obj = Fl_readfp(ctx, fp)))
             break;
         obj = Fl_eval(ctx, obj);
-        if (fp == stdin || exec_str) {
+        if (exec_str || fp == stdin) {
             Fl_writefp(ctx, obj, stdout);
             putchar('\n');
         }
         Fl_Gc_restore(ctx, gci);
     }
     fclose(fp);
-    return 0;
+    return EXIT_SUCCESS;
 }
