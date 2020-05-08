@@ -42,7 +42,7 @@ static void p_load(Fl_Context *ctx, const char *fn) {
             homedir = getpwuid(getuid())->pw_dir;
         if (!full_path) {
             fputs("malloc failure...\n", stderr);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         strcpy(full_path, homedir);
         strcat(full_path, "/.flamingo/lib/");
