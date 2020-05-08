@@ -22,6 +22,7 @@ static Fl_Object *math_mod(Fl_Context *ctx, Fl_Object *args) {
 }
 
 void math_register_all(Fl_Context *ctx) {
+    Fl_set(ctx, Fl_T_symbol(ctx, "pi"), Fl_T_number(ctx, 3.141592653589793238462643383279502884));
     Fl_set(ctx, Fl_T_symbol(ctx, "pow"), Fl_T_cfunc(ctx, math_pow));
     Fl_set(ctx, Fl_T_symbol(ctx, "%"), Fl_T_cfunc(ctx, math_mod));
     Fl_set(ctx, Fl_T_symbol(ctx, "//"), Fl_T_cfunc(ctx, math_idiv));
