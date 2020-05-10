@@ -76,4 +76,3 @@
   (for e l
     (if (func e) (prepend e new)))
   (rev new))
--0
