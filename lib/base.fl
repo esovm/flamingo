@@ -76,11 +76,4 @@
   (for e l
     (if (func e) (prepend e new)))
   (rev new))
-
-($ (range min max)
-  (set i (- max min))
-  (while (>= i 0)
-    (prepend i l)
-    (dec i))
-  (for e l
-    (set e (+ e min))))
+-0
