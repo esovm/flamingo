@@ -1,3 +1,8 @@
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
 #include "util.h"
 
 const char *os_name(void) {
@@ -33,4 +38,9 @@ const char *os_name(void) {
 #else
     return "Unknown";
 #endif
+}
+
+const char *get_home(void) {
+    const char *ret = getenv("HOME");
+    return ret != NULL ? ret : getpwuid(getuid())->pw_dir;
 }
