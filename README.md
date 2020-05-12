@@ -304,4 +304,4 @@ Returns absolute value of expression
 ```
 ---
 
-For a complete view of the useful functions and macros available in Flamingo, check out the base (standard) libary [here](https://github.com/TomerShech/flamingo/blob/master/lib/base.fl).
+For a complete view of the useful functions and macros available in Flamingo, check out the base (standard) library [here](https://github.com/TomerShech/flamingo/blob/master/lib/base.fl).
