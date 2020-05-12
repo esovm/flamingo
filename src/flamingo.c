@@ -44,7 +44,7 @@ void Fl_error(Fl_Context *ctx, const char *message) {
         fprintf(stderr, "-> %s\n", buf);
         cl = M_rest(cl);
     }
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 Fl_Object *Fl_next_arg(Fl_Context *ctx, Fl_Object **arg) {

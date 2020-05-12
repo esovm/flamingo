@@ -1,21 +1,19 @@
 #include <string.h>
 #include <setjmp.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
 
 #include "lib.h"
 #include "util.h"
+#include "config.h"
 #include "flamingo.h"
-
-#define PROGRAM_NAME "flamingo"
-static const char *program_name = PROGRAM_NAME;
 
 static jmp_buf global_execution_context;
 static char buf[1024 * 64];
 
+const char *program_name = FL_PROGRAM_NAME;
+
 static void p_print_help(int exit_status) {
-    printf("Usage: %s [-v] [-s string] [file ...]\n"
+    printf("Usage: %s [-hv] [-s string] [file ...]\n"
     "Options:\n"
     "  -s str   execute string 'str'\n"
     "  -h       print help (this text) and exit\n"
@@ -35,17 +33,15 @@ static void p_load(Fl_Context *ctx, const char *fn) {
     if ((fp = fopen(fn, "r"))) {
         Fl_run_file(ctx, fp);
     } else {
-        const char *homedir = getenv("HOME");
-        /* 16 is strlen of "/.flamingo/lib/" */
-        char *full_path = malloc(strlen(homedir) + strlen(fn) + 16);
-        if (!homedir) /* HOME is not set */
-            homedir = getpwuid(getuid())->pw_dir;
+        const char *homedir = get_home();
+        char *full_path = malloc(strlen(homedir) + strlen(FL_PATH) + strlen(fn));
         if (!full_path) {
             fputs("malloc failure...\n", stderr);
             exit(EXIT_FAILURE);
         }
         strcpy(full_path, homedir);
-        strcat(full_path, "/.flamingo/lib/");
+        strcat(full_path, FL_PATH);
+        strcat(full_path, "/lib/");
         strcat(full_path, fn);
         if (!(fp = fopen(full_path, "r")))
             Fl_error(ctx, "could not load library");
