@@ -13,12 +13,13 @@ set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS)
 
 include_directories("include")
 
-## Source files
-file(GLOB SOURCES "src/*.c" "lib/libbase.c")
-
 ## Executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 ## Flags
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -flto)
+## Source files
+target_sources(${PROJECT_NAME} PRIVATE
+    "src/flamingo.c" "src/type.c" "src/gc.c" "src/util.c" "src/main.c" "lib/libbase.c")
+
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 install(DIRECTORY lib/ DESTINATION $ENV{HOME}/.flamingo/lib FILES_MATCHING PATTERN "*.fl")
