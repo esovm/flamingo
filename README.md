@@ -112,7 +112,7 @@ Mix in some types, why not?
 '("Hello world" 1 2 3 '(1 "Nested") some-identifier "The next is an expression, that can be evalueted" '(* 2 PI))
 ```
 
-The following are equivalent: `'(x y z)`, `(list x y z)`.
+The following are equivalent (for the most part): `'(x y z)`, `(list x y z)`.
 
 ---
 
@@ -149,7 +149,7 @@ Evaluate the rest of the arguments until condition evaluates to nil, which is fa
 
 ---
 
-**TODO** `use` - import a file into another and evaluate its contents
+`use` - import a file into another and evaluate its contents
 
 Let's say we have a file named `add2.fl` with the following function definition:
 ```lisp
@@ -164,6 +164,18 @@ We also have another file, `add4.fl` which wants to use the `add2` function. How
 (use "add2.fl")
 
 ($ (add4 x) (add2 (add2 x)))
+```
+
+---
+
+`type`
+
+Returns the type name of a value or variable as a string:
+
+```lisp
+(type "Oops, I did it again") # string
+(type (+ 5 7.3))              # number
+(type for)                    # macro
 ```
 
 ---
@@ -249,15 +261,6 @@ Returns rest of list (i.e. the list without the first element):
 
 ---
 
-`rev`
-
-Reverses list:
-
-```lisp
-(println (rev '(.5 1.5 2.5 3.5))) # outputs (3.5 2.5 1.5 .5)
-```
-
----
 
 `at`
 
@@ -293,15 +296,5 @@ Applies a function on each element of the list:
 (println (map (fn (x) (* 3 x)) (list 1 2 3))) # same output
 ```
 
----
-
-`abs`
-
-Returns absolute value of expression
-
-```lisp
-(println (abs -4)) # 4
-```
----
 
 For a complete view of the useful functions and macros available in Flamingo, check out the base (standard) library [here](https://github.com/TomerShech/flamingo/blob/master/lib/base.fl).
