@@ -12,7 +12,7 @@ static char buf[1024 * 64];
 
 const char *program_name = FL_PROGRAM_NAME;
 
-static void p_print_help(int exit_status) {
+__attribute__((noreturn)) static void p_print_help(int exit_status) {
     printf("Usage: %s [-hv] [-s string] [file ...]\n"
     "Options:\n"
     "  -s str   execute string 'str'\n"
@@ -67,6 +67,7 @@ int main(int argc, char **argv) {
             return EXIT_SUCCESS;
         case 'h':
             p_print_help(EXIT_SUCCESS);
+            break;
         case 's':
             exec_str = optarg;
             break;
