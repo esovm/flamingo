@@ -6,21 +6,21 @@
 
 /* IMPORTANT: this enum and `builtins` array element order must match */
 enum {
-    BI_LET, BI_SET, BI_IF, BI_FN, BI_MACRO, BI_USE, BI_WHILE, BI_QUOTE, BI_EVAL,
-    BI_AND, BI_OR, BI_DO, BI_CONS, BI_FIRST, BI_REST, BI_SETF, BI_SETR, BI_LIST, BI_NOT, BI_ATOM, BI_PRINT,
+    BI_LET, BI_SET, BI_IF, BI_FN, BI_MACRO, BI_USE, BI_WHILE, BI_QUOTE, BI_EVAL, BI_TYPE, BI_AND,
+    BI_OR, BI_DO, BI_CONS, BI_FIRST, BI_REST, BI_SETF, BI_SETR, BI_LIST, BI_NOT, BI_ATOM, BI_PRINT,
     BI_EQ, BI_LT, BI_LE, BI_GT, BI_GE, BI_ADD, BI_SUB, BI_MUL, BI_DIV, BI_LEN
 };
 
 static const char *const builtins[BI_LEN] = {
-    "let", "set", "if", "fn", "macro", "use", "while", "quote", "eval",
-    "and", "or", "do", "cons", "first", "rest", "setf", "setr", "list", "not", "atom", "print",
+    "let", "set", "if", "fn", "macro", "use", "while", "quote", "eval", "type", "and",
+    "or", "do", "cons", "first", "rest", "setf", "setr", "list", "not", "atom", "print",
     "=", "<", "<=", ">", ">=", "+", "-", "*", "/"
 };
 
 static const char *const types[] = {
     "pair", "free", "nil", "number",
     "symbol", "string", "function", "macro",
-    "built-in", "c-function", "ptr"
+    "built-in", "c-function", "pointer"
 };
 
 Fl_Object nil = { { (void *)(T_NIL << 2 | 1) }, { NULL } };
@@ -57,8 +57,8 @@ Fl_Object *Fl_next_arg(Fl_Context *ctx, Fl_Object **arg) {
     return M_first(a);
 }
 
-static Fl_Object *p_check_type(Fl_Context *ctx, Fl_Object *obj, int type) {
-    if (M_type(obj) != type) {
+static Fl_Object *p_check_type(Fl_Context *ctx, Fl_Object *obj, Fl_Type type) {
+    if ((Fl_Type)M_type(obj) != type) {
         char buf[MAX_BUF_LEN];
         snprintf(buf, sizeof(buf), "expected %s but got %s", types[type], types[M_type(obj)]);
         Fl_error(ctx, buf);
@@ -66,7 +66,7 @@ static Fl_Object *p_check_type(Fl_Context *ctx, Fl_Object *obj, int type) {
     return obj;
 }
 
-int Fl_type(Fl_Context *ctx, Fl_Object *obj) {
+Fl_Type Fl_type(Fl_Context *ctx, Fl_Object *obj) {
     M_unused(ctx);
     return M_type(obj);
 }
@@ -468,6 +468,9 @@ static Fl_Object *p_eval(Fl_Context *ctx, Fl_Object *obj, Fl_Object *env, Fl_Obj
             val1 = p_check_type(ctx, Fl_next_arg(ctx, &arg), T_PAIR);
             res = do_list(ctx, val1, env);
             break;
+        case BI_TYPE:
+            res = Fl_T_string(ctx, types[Fl_type(ctx, eval_arg())]);
+            break;
         case BI_AND:
             while (!M_isnil(arg) && !M_isnil(res = eval_arg()));
             break;
@@ -508,7 +511,7 @@ static Fl_Object *p_eval(Fl_Context *ctx, Fl_Object *obj, Fl_Object *env, Fl_Obj
             while (!M_isnil(arg)) {
                 Fl_writefp(ctx, eval_arg(), stdout);
                 if (!M_isnil(arg))
-                    printf(" ");
+                    fputs(" ", stdout);
             }
             break;
         case BI_EQ:

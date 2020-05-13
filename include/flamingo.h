@@ -66,10 +66,11 @@ struct Fl_Context {
     int next_char;
 };
 
-enum {
+/* IMPORTANT: this enum and `types` array (in flamingo.c) element order must match */
+typedef enum {
     T_PAIR, T_FREE, T_NIL, T_NUMBER, T_SYMBOL,
     T_STRING, T_FUNC, T_MACRO, T_BUILTIN, T_CFUNC, T_PTR
-};
+} Fl_Type;
 
 /* nil symbol, acts as false, and as an empty list ("()") */
 extern Fl_Object nil;
@@ -85,7 +86,7 @@ void Fl_run_file(Fl_Context *ctx, FILE *fp);
 Fl_Handlers *Fl_handlers(Fl_Context *ctx);
 void Fl_error(Fl_Context *ctx, const char *message);
 Fl_Object *Fl_next_arg(Fl_Context *ctx, Fl_Object **arg);
-int Fl_type(Fl_Context *ctx, Fl_Object *obj);
+Fl_Type Fl_type(Fl_Context *ctx, Fl_Object *obj);
 bool Fl_isnil(Fl_Context *ctx, Fl_Object *obj);
 
 /* Mark and sweep garbage collecting */
