@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define FLAMINGO_VERSION "0.7.0"
+#define FLAMINGO_VERSION "0.7.1"
 #define MAX_BUF_LEN 64 /* a random but reasonable number */
 
 /* M_ prefix for all macro functions */
