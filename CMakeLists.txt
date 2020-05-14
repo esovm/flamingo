@@ -22,4 +22,4 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/flamingo.c" "src/type.c" "src/gc.c" "src/util.c" "src/main.c" "lib/libbase.c")
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-install(DIRECTORY lib/ DESTINATION $ENV{HOME}/.flamingo/lib FILES_MATCHING PATTERN "*.fl")
+install(DIRECTORY lib/ DESTINATION $ENV{HOME}/.Flamingo/lib FILES_MATCHING PATTERN "*.fl")

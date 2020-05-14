@@ -5,7 +5,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define FLAMINGO_VERSION "0.7.1"
+#include "config.h"
+
+#define FL_VERSION "0.7.1"
+#define FL_HELP_HEADER FL_PROGRAM_NAME " " FL_VERSION " (compiled " __DATE__ " " __TIME__ ")"
+
 #define MAX_BUF_LEN 64 /* a random but reasonable number */
 
 /* M_ prefix for all macro functions */

@@ -10,14 +10,13 @@
 static jmp_buf global_execution_context;
 static char buf[1024 * 64];
 
-const char *program_name = FL_PROGRAM_NAME;
-
-__attribute__((noreturn)) static void p_print_help(int exit_status) {
-    printf("Usage: %s [-hv] [-s string] [file ...]\n"
+__attribute__((noreturn)) static void p_print_help(int exit_status, char **av) {
+    printf("%s\n"
+    "Usage: %s [-hv] [-s string] [file ...]\n"
     "Options:\n"
     "  -s str   execute string 'str'\n"
     "  -h       print help (this text) and exit\n"
-    "  -v       print version information and exit\n", program_name);
+    "  -v       print version information and exit\n", FL_HELP_HEADER, *av);
     exit(exit_status);
 }
 
@@ -63,16 +62,16 @@ int main(int argc, char **argv) {
     while ((c = getopt(argc, argv, "vhs:")) != -1) {
         switch (c) {
         case 'v':
-            printf("%s %s\n", program_name, FLAMINGO_VERSION);
+            printf("%s %s\nCopyright (C) 2020 Tomer Shechner\n", FL_PROGRAM_NAME, FL_VERSION);
             return EXIT_SUCCESS;
         case 'h':
-            p_print_help(EXIT_SUCCESS);
+            p_print_help(EXIT_SUCCESS, argv);
             break;
         case 's':
             exec_str = optarg;
             break;
         default:
-            p_print_help(EXIT_FAILURE);
+            p_print_help(EXIT_FAILURE, argv);
         }
     }
 
@@ -88,7 +87,7 @@ int main(int argc, char **argv) {
 
     if (fp == stdin) {
         Fl_handlers(ctx)->error = p_error;
-        printf("%s %s on %s\n", program_name, FLAMINGO_VERSION, os_name());
+        printf("%s %s on %s\n", FL_PROGRAM_NAME, FL_VERSION, os_name());
     }
 
     int gci = Fl_Gc_save(ctx); /* gc stack index */
