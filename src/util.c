@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -43,4 +45,19 @@ const char *os_name(void) {
 const char *get_home(void) {
     const char *ret = getenv("HOME");
     return ret != NULL ? ret : getpwuid(getuid())->pw_dir;
+}
+
+char *strip(char *str) {
+    /* strip leading space */
+    while (isspace((unsigned char)*str))
+        ++str;
+    if (!*str) /* all spaces? */
+        return str;
+    /* strip trailing space */
+    char *end = &str[strlen(str) - 1];
+    while (end > str && isspace((unsigned char)*end))
+        --end;
+    /* write new null terminator character */
+    end[1] = '\0';
+    return str;
 }

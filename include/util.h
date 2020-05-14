@@ -3,5 +3,6 @@
 
 const char *os_name(void);
 const char *get_home(void);
+char *strip(char *str);
 
 #endif /* FLAMINGO_UTIL_H */
