@@ -27,24 +27,15 @@ static void p_error(Fl_Context *ctx, const char *message, Fl_Object *call_list) 
     longjmp(global_execution_context, -1);
 }
 
-static void p_load(Fl_Context *ctx, const char *fn) {
+static void p_load(Fl_Context *ctx, const char *filename) {
     FILE *fp;
-    if ((fp = fopen(fn, "r"))) {
+    if ((fp = fopen(filename, "r"))) {
         Fl_run_file(ctx, fp);
     } else {
-        const char *homedir = get_home();
-        char *full_path = malloc(strlen(homedir) + strlen(FL_PATH) + strlen(fn));
-        if (!full_path) {
-            fputs("malloc failure...\n", stderr);
-            exit(EXIT_FAILURE);
-        }
-        strcpy(full_path, homedir);
-        strcat(full_path, FL_PATH);
-        strcat(full_path, "/lib/");
-        strcat(full_path, fn);
-        if (!(fp = fopen(full_path, "r")))
+        char path[4096];
+        snprintf(path, sizeof(path), "%s/.Flamingo/lib/%s", get_home(), filename);
+        if (!(fp = fopen(path, "r")))
             Fl_error(ctx, "could not load library");
-        free(full_path);
         Fl_run_file(ctx, fp);
     }
 }
@@ -56,7 +47,7 @@ int main(int argc, char **argv) {
     char *exec_str = NULL;
     int c;
 
-    p_load(ctx, "base.fl");
+    // p_load(ctx, "base.fl");
     bs_register_all(ctx);
 
     while ((c = getopt(argc, argv, "vhs:")) != -1) {

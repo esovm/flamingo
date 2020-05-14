@@ -6,6 +6,6 @@
 #include "util.h"
 
 #define FL_PROGRAM_NAME "Flamingo"
-#define FL_PATH "/." FL_PROGRAM_NAME
+#define FL_PATH FL_PROGRAM_NAME
 
 #endif /* FLAMINGO_CONFIG_H */

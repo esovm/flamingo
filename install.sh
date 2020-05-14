@@ -25,5 +25,6 @@ sudo -u $real_user mkdir build && cd build
 command -v cmake > /dev/null 2>&1 || { echo >&2 "I require CMake but it's not installed. Please get it from <https://cmake.org/download>, then try again."; exit 1; }
 
 # Run CMake, then make, and finally install the stripped binary
-sudo -u $real_user cmake -DCMAKE_BUILD_TYPE=Release .. && make
+sudo -u $real_user cmake -DCMAKE_BUILD_TYPE=Release ..
+sudo -u $real_user make
 make install/strip

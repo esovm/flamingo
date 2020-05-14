@@ -1,8 +1,9 @@
 #include <string.h>
 
-#include "flamingo.h"
-#include "type.h"
 #include "gc.h"
+#include "lib.h"
+#include "type.h"
+#include "flamingo.h"
 
 /* IMPORTANT: this enum and `builtins` array element order must match */
 enum {
@@ -447,10 +448,17 @@ static Fl_Object *p_eval(Fl_Context *ctx, Fl_Object *obj, Fl_Object *env, Fl_Obj
             char file_name[MAX_BUF_LEN * 16]; /* 1KB, a pretty sensible buffer size */
             val1 = p_check_type(ctx, eval_arg(), T_STRING);
             Fl_to_string(ctx, val1, file_name, sizeof(file_name));
-            FILE *fp = fopen(file_name, "r");
-            if (!fp)
-                Fl_error(ctx, "could not load file");
-            Fl_run_file(ctx, fp);
+
+            if (*file_name == '@') { /* dynamic library */
+                int r = libload(ctx, file_name + 1);
+                if (r == -1)
+                    Fl_error(ctx, "could not load shared object");
+            } else {
+                FILE *fp = fopen(file_name, "r");
+                if (!fp)
+                    Fl_error(ctx, "could not load file");
+                Fl_run_file(ctx, fp);
+            }
             break;
         }
         case BI_WHILE:
