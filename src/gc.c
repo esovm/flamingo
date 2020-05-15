@@ -2,7 +2,7 @@
 
 void Fl_Gc_push(Fl_Context *ctx, Fl_Object *obj) {
     if (ctx->gcstack_index == GC_MAX_STACK_SIZE)
-        Fl_error(ctx, "garbage collector stack overflow :(\n");
+        Fl_error(ctx, "garbage collector stack overflow :(");
     ctx->gcstack[ctx->gcstack_index++] = obj;
 }
 

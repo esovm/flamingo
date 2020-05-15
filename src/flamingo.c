@@ -1,4 +1,5 @@
 #include <string.h>
+#include <dlfcn.h>
 
 #include "gc.h"
 #include "lib.h"
@@ -450,9 +451,7 @@ static Fl_Object *p_eval(Fl_Context *ctx, Fl_Object *obj, Fl_Object *env, Fl_Obj
             Fl_to_string(ctx, val1, file_name, sizeof(file_name));
 
             if (*file_name == '@') { /* dynamic library */
-                int r = libload(ctx, file_name + 1);
-                if (r == -1)
-                    Fl_error(ctx, "could not load shared object");
+                libload(ctx, file_name + 1, (char *[]){ "math_pow", "pow", "math_idiv", "//", "math_mod", "%" }, 6);
             } else {
                 FILE *fp = fopen(file_name, "r");
                 if (!fp)
@@ -480,10 +479,10 @@ static Fl_Object *p_eval(Fl_Context *ctx, Fl_Object *obj, Fl_Object *env, Fl_Obj
             res = Fl_T_string(ctx, types[Fl_type(ctx, eval_arg())]);
             break;
         case BI_AND:
-            while (!M_isnil(arg) && !M_isnil(res = eval_arg()));
+            while (!M_isnil(arg) && !M_isnil(res = eval_arg())) {}
             break;
         case BI_OR:
-            while (!M_isnil(arg) && M_isnil(res = eval_arg()));
+            while (!M_isnil(arg) && M_isnil(res = eval_arg())) {}
             break;
         case BI_DO:
             res = do_list(ctx, arg, env);

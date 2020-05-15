@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     char *exec_str = NULL;
     int c;
 
-    // p_load(ctx, "base.fl");
+    p_load(ctx, "base.fl");
     bs_register_all(ctx);
 
     while ((c = getopt(argc, argv, "vhs:")) != -1) {

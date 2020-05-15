@@ -6,6 +6,6 @@
 void bs_register_all(Fl_Context *);
 void math_register_all(Fl_Context *);
 
-int libload(Fl_Context *ctx, const char *name);
+void libload(Fl_Context *ctx, const char *libname, char **funcs, size_t len);
 
 #endif /* FLAMINGO_LIB_H */
