@@ -33,9 +33,14 @@ static void p_load(Fl_Context *ctx, const char *filename) {
         Fl_run_file(ctx, fp);
     } else {
         char path[4096];
-        snprintf(path, sizeof(path), "%s/.Flamingo/lib/%s", get_home(), filename);
-        if (!(fp = fopen(path, "r")))
-            Fl_error(ctx, "could not load library");
+        const char *home = get_home();
+        snprintf(path, sizeof(path), "%s/.Flamingo/lib/%s", home, filename);
+        if (!(fp = fopen(path, "r"))) {
+            fprintf(stderr, "NOTE: the base library could not be loaded - "
+                "its functions won't be available.\nplease make sure the folder '%s%s' exists\n\n",
+                home, "/.Flamingo");
+            return;
+        }
         Fl_run_file(ctx, fp);
     }
 }
