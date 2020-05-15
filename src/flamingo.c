@@ -451,7 +451,8 @@ static Fl_Object *p_eval(Fl_Context *ctx, Fl_Object *obj, Fl_Object *env, Fl_Obj
             Fl_to_string(ctx, val1, file_name, sizeof(file_name));
 
             if (*file_name == '@') { /* dynamic library */
-                libload(ctx, file_name + 1, (char *[]){ "math_pow", "pow", "math_idiv", "//", "math_mod", "%" }, 6);
+                libload(ctx, file_name + 1, (char *[]){ "math_pow", "pow", "math_idiv",
+                    "//", "math_mod", "%", NULL });
             } else {
                 FILE *fp = fopen(file_name, "r");
                 if (!fp)

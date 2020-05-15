@@ -3,7 +3,7 @@
 #include "lib.h"
 #include "type.h"
 
-void libload(Fl_Context *ctx, const char *libname, char **funcs, size_t len) {
+void libload(Fl_Context *ctx, const char *libname, char **funcs) {
     void *handle = dlopen(libname, RTLD_LAZY);
     char *err;
 
@@ -12,7 +12,7 @@ void libload(Fl_Context *ctx, const char *libname, char **funcs, size_t len) {
 
     dlerror(); /* clear any existing error */
 
-    for (size_t i = 0; i < len; i += 2) {
+    for (size_t i = 0; funcs[i]; i += 2) {
         Fl_CFunc sym;
         *(void **)(&sym) = dlsym(handle, funcs[i]);
         if ((err = dlerror())) {
