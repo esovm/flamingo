@@ -19,7 +19,8 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -flto)
 ## Source files
 target_sources(${PROJECT_NAME} PRIVATE
-    "src/flamingo.c" "src/type.c" "src/gc.c" "src/util.c" "src/main.c" "lib/libbase.c" "lib/dl.c")
+    "src/flamingo.c" "src/type.c" "src/gc.c" "src/util.c" "src/main.c"
+    "lib/dl.c" "lib/libbase.c" "lib/libmath.c")
 target_link_libraries(${PROJECT_NAME} m dl)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)

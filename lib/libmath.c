@@ -1,7 +1,7 @@
 #include <math.h>
 
-#include "flamingo.h"
 #include "type.h"
+#include "lib.h"
 
 Fl_Object *_pow(Fl_Context *ctx, Fl_Object *args) {
     Fl_Number a = Fl_to_number(ctx, Fl_next_arg(ctx, &args));
