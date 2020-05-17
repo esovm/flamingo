@@ -4,8 +4,8 @@
     (+ (fib (- n 1)) (fib (- n 2)))))
 
 (print "Fibonacci sequence up to: ")
-(set n (num (read)))
-(set i 0)
+(:= n (num (read)))
+(:= i 0)
 (while (< i n)
   (println (fib i))
   (inc i))

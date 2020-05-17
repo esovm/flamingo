@@ -77,23 +77,23 @@ Like s-expressions, quotes are lists. Unlike s-expressions, they don't get evalu
 
 ```lisp
 # a helper macro for defining functions.
-(set $ (macro (params . body)
-  (list 'set (first params) (list 'fn (rest params) (cons 'do body)))))
+(:= $ (macro (params . body)
+  (list ':= (first params) (list 'fn (rest params) (cons 'do body)))))
 ```
 
-As you can see, we use a quote on `set`, `fn` and `do` in order to force them to just stay as they are. Quotes are very commonly used with macros, e.g. the standard library `for` macro, which allows us to iterate over a list:
+As you can see, we use a quote on `:=`, `fn` and `do` in order to force them to just stay as they are. Quotes are very commonly used with macros, e.g. the standard library `for` macro, which allows us to iterate over a list:
 ```lisp
 # iterate over each element of list `l` with symbol `i`.
-(set for (macro (i l . body)
+(:= for (macro (i l . body)
   (list 'do
     (list 'let 'it l)
     (list 'while 'it
       (list 'let i '(first it))
-      '(set it (rest it))
+      '(:= it (rest it))
       (cons 'do body)))))
 ```
 ```lisp
-(set primes (list 2 3 5 7 11))
+(:= primes (list 2 3 5 7 11))
 (for p primes
   (print " -> " p))
 
@@ -123,7 +123,7 @@ The following are equivalent (for the most part): `'(x y z)`, `(list x y z)`.
 This function allows us to create user-defined functions, and using them by assigning them to symbols. For example, a simple factorial function can be written as:
 
 ```lisp
-(set fact (n)
+(:= fact (n)
   (if (< n 2)
     n
     (* n (fact (- n 1)))))
@@ -139,7 +139,7 @@ Usually, the macro `$` is used to create functions. (it uses `fn` under the hood
 Evaluate the rest of the arguments until condition evaluates to nil, which is falsey.
 
 ```lisp
-(set i 10)
+(:= i 10)
 (while (> i 0)
   (print i)
   (dec i))
@@ -189,7 +189,7 @@ Function that chooses the branch depending on given condition:
 ```
 As you would expect, you can use multiple conditions with `if`, just like `else if` in other languages:
 ```lisp
-(set name "Michael")
+(:= name "Michael")
 (if (= name "John")
   (println "Hey Johnny boy!")
   (= name "Alice")
@@ -229,15 +229,13 @@ Creates a locally available variable with specified name and initial value:
 
 ---
 
-
-`set`
+`:=`
 
 Creates a globally available variable with specified name and initial value:
 
 ```lisp
-(set var-name value)
+(:= var-name value)
 ```
-
 
 ---
 

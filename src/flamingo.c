@@ -14,7 +14,7 @@ enum {
 };
 
 static const char *const builtins[BI_LEN] = {
-    "let", "set", "if", "fn", "macro", "use", "while", "quote", "eval", "type", "and",
+    "let", ":=", "if", "fn", "macro", "use", "while", "quote", "eval", "type", "and",
     "or", "do", "cons", "first", "rest", "setf", "setr", "list", "not", "atom", "print",
     "=", "<", "<=", ">", ">=", "+", "-", "*", "/"
 };
@@ -26,6 +26,7 @@ static const char *const types[] = {
 };
 
 Fl_Object nil = { { (void *)(T_NIL << 2 | 1) }, { NULL } };
+static Fl_Object rpr; /* ")" */
 
 Fl_Handlers *Fl_handlers(Fl_Context *ctx) {
     return &ctx->handlers;
@@ -244,7 +245,6 @@ void Fl_set(Fl_Context *ctx, Fl_Object *sym, Fl_Object *value) {
     M_rest(p_get_bound(sym, &nil)) = value;
 }
 
-static Fl_Object rpr; /* ")" */
 
 static Fl_Object *p_read(Fl_Context *ctx, Fl_Read_fn rfn, void *data) {
     Fl_Object *value, *res;
@@ -449,10 +449,8 @@ static Fl_Object *p_eval(Fl_Context *ctx, Fl_Object *obj, Fl_Object *env, Fl_Obj
             char file_name[MAX_BUF_LEN * 16]; /* 1KB, a pretty sensible buffer size */
             val1 = p_check_type(ctx, eval_arg(), T_STRING);
             Fl_to_string(ctx, val1, file_name, sizeof(file_name));
-
             if (*file_name == '@') { /* dynamic library */
-                libload(ctx, file_name + 1, (char *[]){ "math_pow", "pow", "math_idiv",
-                    "//", "math_mod", "%", NULL });
+                libload(ctx, file_name + 1, (char *[]){ "math_pow", "pow", "math_idiv", "//", "math_mod", "%", NULL });
             } else {
                 FILE *fp = fopen(file_name, "r");
                 if (!fp)
