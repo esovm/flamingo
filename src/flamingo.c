@@ -1,5 +1,4 @@
 #include <string.h>
-#include <dlfcn.h>
 
 #include "gc.h"
 #include "lib.h"
@@ -449,14 +448,10 @@ static Fl_Object *p_eval(Fl_Context *ctx, Fl_Object *obj, Fl_Object *env, Fl_Obj
             char file_name[MAX_BUF_LEN * 16]; /* 1KB, a pretty sensible buffer size */
             val1 = p_check_type(ctx, eval_arg(), T_STRING);
             Fl_to_string(ctx, val1, file_name, sizeof(file_name));
-            if (*file_name == '@') { /* dynamic library */
-                libload(ctx, file_name + 1, (char *[]){ "math_pow", "pow", "math_idiv", "//", "math_mod", "%", NULL });
-            } else {
-                FILE *fp = fopen(file_name, "r");
-                if (!fp)
-                    Fl_error(ctx, "could not load file");
-                Fl_run_file(ctx, fp);
-            }
+            FILE *fp = fopen(file_name, "r");
+            if (!fp)
+                Fl_error(ctx, "could not load file");
+            Fl_run_file(ctx, fp);
             break;
         }
         case BI_WHILE:

@@ -17,25 +17,6 @@ typedef enum {
     S2N_INCONVERTIBLE = -3,
 } str2num_errno;
 
-static Fl_Object *bs_platform(Fl_Context *ctx, Fl_Object *args) {
-    M_unused(args);
-    return Fl_T_string(ctx, os_name());
-}
-
-static Fl_Object *bs_read(Fl_Context *ctx, Fl_Object *args) {
-    M_unused(args);
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t nread;
-    if ((nread = getline(&line, &len, stdin)) == -1)
-        return Fl_T_bool(ctx, false);
-    if (line[nread - 1] == '\n')
-        line[nread-- - 1] = '\0';
-    Fl_Object *ret = Fl_T_string(ctx, line);
-    free(line);
-    return ret;
-}
-
 static str2num_errno str2num(Fl_Number *out, char *s) {
     char *end;
     if (!*s || isspace((unsigned char)*s))
@@ -53,15 +34,30 @@ static str2num_errno str2num(Fl_Number *out, char *s) {
     return S2N_SUCCESS;
 }
 
-static Fl_Object *bs_str_to_num(Fl_Context *ctx, Fl_Object *args) {
+Fl_Object *_platform(Fl_Context *ctx, Fl_Object *args) {
+    M_unused(args);
+    return Fl_T_string(ctx, os_name());
+}
+
+Fl_Object *_read(Fl_Context *ctx, Fl_Object *args) {
+    M_unused(args);
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t nread;
+    if ((nread = getline(&line, &len, stdin)) == -1)
+        return Fl_T_bool(ctx, false);
+    if (line[nread - 1] == '\n')
+        line[nread-- - 1] = '\0';
+    Fl_Object *ret = Fl_T_string(ctx, line);
+    free(line);
+    return ret;
+}
+
+Fl_Object *_str_to_num(Fl_Context *ctx, Fl_Object *args) {
     char buf[MAX_BUF_LEN];
     Fl_to_string(ctx, Fl_next_arg(ctx, &args), buf, sizeof(buf));
     Fl_Number n;
     return str2num(&n, strip(buf)) == S2N_SUCCESS ? Fl_T_number(ctx, n) : Fl_T_bool(ctx, false);
 }
 
-void bs_register_all(Fl_Context *ctx) {
-    Fl_set(ctx, Fl_T_symbol(ctx, "platform"), Fl_T_cfunc(ctx, bs_platform));
-    Fl_set(ctx, Fl_T_symbol(ctx, "read"), Fl_T_cfunc(ctx, bs_read));
-    Fl_set(ctx, Fl_T_symbol(ctx, "num"), Fl_T_cfunc(ctx, bs_str_to_num));
-}
+char *base_lib[] = { "_platform", "platform", "_read", "read", "_str_to_num", "num", NULL };

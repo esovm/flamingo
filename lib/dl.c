@@ -3,7 +3,7 @@
 #include "lib.h"
 #include "type.h"
 
-void libload(Fl_Context *ctx, const char *libname, char **funcs) {
+void dl_load(Fl_Context *ctx, const char *libname, char **funcs) {
     void *handle = dlopen(libname, RTLD_LAZY);
     char *err;
 

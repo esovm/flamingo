@@ -3,9 +3,9 @@
 
 #include "flamingo.h"
 
-void bs_register_all(Fl_Context *);
-void math_register_all(Fl_Context *);
+extern char *base_lib[];
+extern char *math_lib[];
 
-void libload(Fl_Context *ctx, const char *libname, char **funcs);
+void dl_load(Fl_Context *ctx, const char *libname, char **funcs);
 
 #endif /* FLAMINGO_LIB_H */

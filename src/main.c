@@ -53,7 +53,8 @@ int main(int argc, char **argv) {
     int c;
 
     p_load(ctx, "base.fl");
-    bs_register_all(ctx);
+    // dl_load(ctx, "../lib/libbase.so", base_lib);
+    dl_load(ctx, "../lib/libmath.so", math_lib);
 
     while ((c = getopt(argc, argv, "vhs:")) != -1) {
         switch (c) {
