@@ -24,4 +24,5 @@ target_sources(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME} m dl)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-install(DIRECTORY lib/ DESTINATION $ENV{HOME}/.Flamingo/lib FILES_MATCHING PATTERN "*.fl")
+install(DIRECTORY lib/ DESTINATION $ENV{HOME}/.Flamingo/fl FILES_MATCHING PATTERN "*.fl")
+install(DIRECTORY lib/ DESTINATION $ENV{HOME}/.Flamingo/lib FILES_MATCHING PATTERN "*.so")
