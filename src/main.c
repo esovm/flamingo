@@ -27,21 +27,27 @@ static void p_error(Fl_Context *ctx, const char *message, Fl_Object *call_list) 
     longjmp(global_execution_context, -1);
 }
 
-static void p_load(Fl_Context *ctx, const char *filename) {
-    FILE *fp;
-    if ((fp = fopen(filename, "r"))) {
-        Fl_run_file(ctx, fp);
-    } else {
-        char path[4096];
-        const char *home = get_home();
-        snprintf(path, sizeof(path), "%s/.Flamingo/lib/%s", home, filename);
-        if (!(fp = fopen(path, "r"))) {
-            fprintf(stderr, "NOTE: the base library could not be loaded - "
-                "its functions won't be available.\nplease make sure the folder '%s%s' exists\n\n",
-                home, "/.Flamingo");
-            return;
+static void p_load(Fl_Context *ctx, const char *filename, char **funcs) {
+    char path[4096];
+    const char *home = get_home();
+
+    if (!funcs) {
+        FILE *fp;
+        if ((fp = fopen(filename, "r"))) {
+            Fl_run_file(ctx, fp);
+        } else {
+            snprintf(path, sizeof(path), "%s/.Flamingo/fl/%s", home, filename);
+            if ((fp = fopen(path, "r"))) {
+                Fl_run_file(ctx, fp);
+            } else {
+                fprintf(stderr, "NOTE: the base library could not be loaded - "
+                    "its functions won't be available.\nplease make sure the folder '%s%s' exists\n\n",
+                    home, "/.Flamingo");
+            }
         }
-        Fl_run_file(ctx, fp);
+    } else {
+        snprintf(path, sizeof(path), "%s/.Flamingo/lib/%s", home, filename);
+        dl_load(ctx, path, funcs);
     }
 }
 
@@ -52,9 +58,8 @@ int main(int argc, char **argv) {
     char *exec_str = NULL;
     int c;
 
-    p_load(ctx, "base.fl");
-    dl_load(ctx, "lib/libbase.so", base_lib);
-    dl_load(ctx, "lib/libmath.so", math_lib);
+    p_load(ctx, "base.fl", NULL);
+    p_load(ctx, "libmath.so", math_lib);
 
     while ((c = getopt(argc, argv, "vhs:")) != -1) {
         switch (c) {

@@ -244,7 +244,6 @@ void Fl_set(Fl_Context *ctx, Fl_Object *sym, Fl_Object *value) {
     M_rest(p_get_bound(sym, &nil)) = value;
 }
 
-
 static Fl_Object *p_read(Fl_Context *ctx, Fl_Read_fn rfn, void *data) {
     Fl_Object *value, *res;
 
